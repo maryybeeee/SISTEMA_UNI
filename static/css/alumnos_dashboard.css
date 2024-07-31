@@ -1,0 +1,110 @@
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.table th, .table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.table th {
+    background-color: #f2f2f2;
+}
+
+.table-striped tbody tr:nth-child(odd) {
+    background-color: #f9f9f9;
+}
+
+.table-bordered {
+    border: 1px solid #ddd;
+}
+
+.file-input {
+    display: none;
+}
+
+.file-label {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #0e286e;
+    color: #fff;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.file-label:hover {
+    background-color: #575757;
+}
+
+.file-name {
+    margin-left: 10px;
+    font-style: italic;
+    color: #555;
+}
+
+.logout-button {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 10px 20px;
+    background-color: #0e286e;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.logout-button:hover {
+    background-color: #575757;
+}
+
+
+
+
+
+
+/* Tabla de datos 
+.data-table {
+    margin-top: 20px;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-row {
+    display: flex;
+    border-bottom: 1px solid #ddd;
+}
+
+.data-cell {
+    flex: 1;
+    padding: 10px;
+    text-align: left;
+}
+
+/* Estilos alternativos para filas
+.data-row:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* Estilos para el input de archivos
+
+
+/* Contenedor del dashboard 
+.dashboard-container {
+    margin: 20px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-container h1 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #0e286e;
+} 
+*/

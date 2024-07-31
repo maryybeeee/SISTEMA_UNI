@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAANlBMVEUIIIAIIIAIIIAIIIAIIIAHIH9HcEwHIIAIIIAHIIAIIIAIIIAIIIAIIIAIIIAIIIAIIIAIIH+DvJYkAAAAEnRSTlNs/9zF6wsAjUU6+VBge68lmxjFcB0GAAABmUlEQVR4AW2RQRLlIAgFaTWoUVTvf9kZyvxkFtM7QhfPgAhOiDEm/uXSwxFSzEVVa755iPoJjjdiU9XOob6C8ZH888Aj9RWmdLH1e8BQVXsTHOlw+xN2WffT8dSs12yXFyWbSA4wu7UAEqpmnMcuPj2NXoXeZ03iOfH7V5EhrVmIRSCRZCeIm0P3CZ6cVr88AJAEyHgzpPaSvVPj/ReoLtzzzZAMIZvlvMXMupReAlwJHHkWdac+8Ki+B76rvcApKjNbXs4uI1x1pa06OSuPWz3C8ZxuO5HOr2n93UO2mWWzFWSU4qapMyF8x1qhx9qv0P8vZMHGiLGN/t3ZI5a6UGokNhoj17a49dB5pomrGwpxyeh96yHzGBKhRIYROhJgHSX9jiGBWM7yN6zW59VC4sflwnXDDFAGkBIN5z1WNAM0eQVO5UX8kRdwe4/iLU988VXrAoKeunrawInh9gSVC77pTWV2nKwP51hDOXRLOElfIXm9fsLkYb5CPQPBscLDeIWtxXJxgVj3zY/9E4RVZr2uOXUvPpoe/gCIMhOUppy6nQAAAABJRU5ErkJggg==" >
+    <!-- Enlaces a los estilos CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+    <!-- Enlace a Font Awesome para los iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <!-- Contenedor principal que incluye el contenido y el menú lateral -->
+    <div id="content">
+        <!-- Contenedor de logos -->
+        <div class="logos-container">
+            <img src="https://aguascalientes.tecnm.mx/wp-content/uploads/2023/09/pleca_tecnm.jpg" alt="Logo 2">
+            <img src="https://aguascalientes.tecnm.mx/wp-content/uploads/2023/09/xtGahDD.png" alt="Logo 1">
+        </div>
+        <!-- Barra de menú principal -->
+        <header>
+            <div class="menu-bar">
+                <ul>
+                    <!-- Icono para Inicio (Home) -->
+                    <li><a href="{{ url_for('index') }}"><i class="fas fa-home menu-icon"></i></a></li>
+                </ul>
+                <ul>
+                    <!-- Icono para Usuario -->
+                    <li><a href="#" id="user-icon"><i class="fas fa-user-circle menu-icon"></i></a></li>
+                </ul>
+            </div>
+        </header>
+        <!-- Menú lateral desplegable -->
+        <div id="side-menu" class="side-menu">
+            <a href="#" class="close-btn" id="close-btn">&times;</a>
+            <a href="{{ url_for('register_alumnos') }}"><i class="fas fa-user-circle"></i> Registrate como Alumno</a>
+            <a href="{{ url_for('login_alumnos') }}"><i class="fas fa-user-graduate"></i> Iniciar Sesión como Alumno</a>
+            <a href="{{ url_for('login_profesores') }}"><i class="fas fa-chalkboard-teacher"></i> Iniciar Sesión como Profesor</a>
+            {% if 'user_id' in session %}
+            <p><a href="{{ url_for('logout') }}" class="logout-button">Cerrar sesión</a></p>
+            {% if session.get('user_role') == 'profesor' %}
+            <p><a href="{{ url_for('profesores_dashboard') }}" class="button">Panel de Profesor</a></p>
+            {% elif session.get('user_role') == 'alumno' %}
+            <p><a href="{{ url_for('alumnos_dashboard') }}" class="button">Panel de Alumno</a></p>
+            {% endif %}
+            {% endif %}
+        </div>
+        <!-- Contenido principal de cada página -->
+        <main class="main">
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
+    <!-- Pie de página -->
+    <footer>
+        <div class="footer-content">
+            <div class="contact-info">
+                <h4>Contacto</h4>
+                <p>Teléfono: 123-456-789</p>
+                <p>Email: contacto@ejemplo.com</p>
+            </div>
+            <div class="legal-info">
+                <hr>
+                <p>&copy; Derechos Reservados. Última actualización: {{ current_date }}</p>
+            </div>
+        </div>
+    </footer>
+    <!-- Script para controlar el menú lateral -->
+    <script src="{{ url_for('static', filename='js/layout.js') }}"></script>
+</body>
+</html>

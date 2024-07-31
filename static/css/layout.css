@@ -1,0 +1,225 @@
+/* Importar la fuente Questrial */
+@import url('https://fonts.googleapis.com/css2?family=Questrial&display=swap');
+
+/* Estilo para el cuerpo del documento */
+body {
+    font-family: 'Questrial', sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Cambiado a 100vh */
+    background-color: #f4f4f4;
+}
+
+/* Estilo para el contenedor principal */
+#content {
+    flex: 1;
+}
+
+/* Estilos para el contenedor de los logos */
+.logos-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #fff;
+    color: #333;
+    padding: 10px 40px;
+}
+
+/* Estilos para las imágenes de los logos */
+.logos-container img {
+    max-height: 120px;
+    margin: 0 10px; 
+}
+
+/* Estilos para la barra de menú */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #0e286e;
+    color: #fff;
+    padding: 10px 40px;
+}
+
+.menu-bar {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.menu-bar ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.menu-bar ul li {
+    margin: 0 10px;
+}
+
+.menu-bar ul li a {
+    color: #fff;
+    text-decoration: none;
+}
+
+.menu-icon {
+    font-size: 24px; 
+}
+
+/* Estilos para el contenido principal */
+.main {
+    margin: 20px;
+}
+
+/* Estilos para el pie de página */
+footer {
+    background-color: #0e286e;
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.contact-info, .legal-info {
+    flex: 1;
+    padding: 10px;
+}
+
+.separator {
+    border-top: 1px solid #fff;
+    margin: 30px 0;
+}
+
+/* Estilos para el menú lateral */
+.side-menu {
+    height: 100%;
+    width: 0px; 
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    right: 0;
+    background-color: #0e286e;
+    overflow-x: hidden;
+    transition: 0.5s;
+    padding-top: 60px;
+}
+
+.side-menu a {
+    padding: 10px 15px;
+    text-decoration: none;
+    font-size: 18px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    transition: 0.3s;
+    line-height: 1.5;
+}
+
+.side-menu a i {
+    margin-right: 10px;
+    font-size: 20px;
+}
+
+.side-menu a:hover {
+    background-color: #575757;
+}
+
+.side-menu .close-btn {
+    position: absolute;
+    border-radius: 50%;
+    padding: 15px;
+    top: 0%;
+    right: 0%;
+    font-size: 30px;
+}
+
+/* Ajustes para el formulario de inicio de sesión de alumnos */
+.container {
+    max-width: 600px;
+    margin: 50px auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+select {
+    width: calc(100% - 22px);
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    margin-right: 10px;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* Estilos específicos para el campo de contraseña */
+.form-group.password-container {
+    position: relative;
+}
+
+.form-group.password-container input[type="password"],
+.form-group.password-container input[type="text"] {
+    width: calc(100% - 36px);
+    padding-right: 36px;
+    box-sizing: border-box;
+}
+
+.form-group.password-container .password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #ccc;
+}
+
+.error{
+    color: white;
+    border-radius: 10px;
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #ff0000;
+}

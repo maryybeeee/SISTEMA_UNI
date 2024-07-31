@@ -1,0 +1,55 @@
+{% extends 'layout.html' %}
+{% block title %}Jornadas Académicas{% endblock %}
+{% block content %}
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/profesores_dashboard.css') }}">
+    <script>
+        function confirmarEliminacion() {
+            return confirm("¿Estás seguro de que deseas eliminar este registro?");
+        }
+    </script>    
+</head>
+<body>
+    <center><h2>Jornadas Académicas</h2></center>
+    <table class="table table-bordered table-striped">
+        <thead class="thead-light">
+            <tr>
+                <th scope="col">No. de Control</th>
+                <th scope="col">Apellido Paterno</th>
+                <th scope="col">Apellido Materno</th>
+                <th scope="col">Nombres</th>
+                <th scope="col">2019</th>
+                <th scope="col">2021-A</th>
+                <th scope="col">2021-B</th>
+                <th scope="col">2022</th>
+                <th scope="col">2023</th>
+                <th scope="col">Conteo</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Atendidos</th>
+                <th scope="col">Eliminar</th>
+                <th scope="col">Actualizar</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for alumno in alumnos %}
+            <tr>
+                <td>{{ alumno.0 }}</td>
+                <td>{{ alumno.1 }}</td>
+                <td>{{ alumno.2 }}</td>
+                <td>{{ alumno.3 }}</td>
+                <td>{{ alumno.4 }}</td>
+                <td>{{ alumno.5 }}</td>
+                <td>{{ alumno.6 }}</td>
+                <td>{{ alumno.7 }}</td>
+                <td>{{ alumno.8 }}</td>
+                <td class="{% if alumno[9] == 0 %}class0{% elif alumno[9] == 1 %}class1{% elif alumno[9] == 2 %}class2{% elif alumno[9] == 3 %}class3{% elif alumno[9] == 4 %}class4{% endif %}">{{ alumno[9] }}</td>
+                <td>{% if alumno[10] == 0 %}No liberado{% elif alumno[10] == 1 %}Liberado{% else %}Desconocido{% endif %}</td>
+                <td>{% if alumno[11] == 0 %}No atendido{% elif alumno[11] == 1 %}Atendido{% else %}Desconocido{% endif %}</td>
+                <td><form action="/alumno_borrar/{{ alumno[0] }}" method="POST" style="display:inline;"><button type="submit" onclick="return confirmarEliminacion();" class="btn btn-danger">Eliminar</button></form></td>
+                <td><a href="/actualizar_alumno/{{ alumno[0] }}" class="btn btn-primary">Actualizar</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+{% endblock %}

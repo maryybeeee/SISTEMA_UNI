@@ -1,0 +1,69 @@
+{% extends 'layout.html' %}
+{% block title %}Usuario {{ session['user_id'] }}{% endblock %}
+{% block content %}
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/alumnos_dashboard.css') }}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <center><h1>Bienvenido {{ session['user_id'] }}</h1></center>
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>No. Control</th>
+                    <th>Apellido P</th>
+                    <th>Apellido M</th>
+                    <th>Nombres</th>
+                    <th>2019</th>
+                    <th>2021-A</th>
+                    <th>2021-B</th>
+                    <th>2022</th>
+                    <th>2023</th>
+                    <th>Guardar</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in alumno %}
+                <tr>
+                    <form action="" method="POST" enctype="multipart/form-data">
+                        <td>{{ item.0 }}</td>
+                        <td>{{ item.1 }}</td>
+                        <td>{{ item.2 }}</td>
+                        <td>{{ item.3 }}</td>
+                        <td>
+                            <input type="file" name="file1" class="file-input" id="file-input-{{ loop.index }}-1" />
+                            <label for="file-input-{{ loop.index }}-1" class="file-label">Subir archivo</label>
+                            <span class="file-name" id="file-name-{{ loop.index }}-1">No se ha seleccionado archivo</span>
+                        </td>
+                        <td>
+                            <input type="file" name="file2" class="file-input" id="file-input-{{ loop.index }}-2" />
+                            <label for="file-input-{{ loop.index }}-2" class="file-label">Subir archivo</label>
+                            <span class="file-name" id="file-name-{{ loop.index }}-2">No se ha seleccionado archivo</span>
+                        </td>
+                        <td>
+                            <input type="file" name="file3" class="file-input" id="file-input-{{ loop.index }}-3" />
+                            <label for="file-input-{{ loop.index }}-3" class="file-label">Subir archivo</label>
+                            <span class="file-name" id="file-name-{{ loop.index }}-3">No se ha seleccionado archivo</span>
+                        </td>
+                        <td>
+                            <input type="file" name="file4" class="file-input" id="file-input-{{ loop.index }}-4" />
+                            <label for="file-input-{{ loop.index }}-4" class="file-label">Subir archivo</label>
+                            <span class="file-name" id="file-name-{{ loop.index }}-4">No se ha seleccionado archivo</span>
+                        </td>
+                        <td>
+                            <input type="file" name="file5" class="file-input" id="file-input-{{ loop.index }}-5" />
+                            <label for="file-input-{{ loop.index }}-5" class="file-label">Subir archivo</label>
+                            <span class="file-name" id="file-name-{{ loop.index }}-5">No se ha seleccionado archivo</span>
+                        </td>
+                        <td>
+                            <input type="hidden" name="no_control" value="{{ item.0 }}" />
+                            <button type="submit">Guardar</button>
+                        </td>
+                    </form>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+{% endblock %}
