@@ -135,23 +135,72 @@ def iniciar_profesores():
     return render_template('login_profesores.html', error=error)
 
 # Ruta para mostrar la tabla de las jornadas académicas de los alumnos
-@app.route('/profesores_dashboard')
+@app.route('/profesores_dashboard', methods=['GET', 'POST'])
 def profesores_dashboard():
     if 'user_id' in session and session.get('user_role') == 'profesor':
+        if request.method == 'POST':
+            if 'add_column' in request.form:
+                column_name = request.form['column_name']
+                if column_name:
+                    try:
+                        conn = mysql.connector.connect(**db_config)
+                        cursor = conn.cursor()
+                        cursor.execute("SHOW COLUMNS FROM jornadas_academicas")
+                        columns = [row[0] for row in cursor.fetchall() if row[0] not in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres', 'Estado', 'Atendidos']]  # Cambio necesario aquí
+                        if 'Conteo' in columns:
+                            conteo_column = columns.index('Conteo')
+                            cursor.execute(f"ALTER TABLE jornadas_academicas ADD COLUMN `{column_name}` VARCHAR(255) NOT NULL AFTER `{columns[conteo_column-1]}`")
+                        else:
+                            cursor.execute(f"ALTER TABLE jornadas_academicas ADD COLUMN `{column_name}` VARCHAR(255) NOT NULL")
+                        conn.commit()
+                        cursor.close()
+                        conn.close()
+                        flash('Columna agregada con éxito', 'success')
+                    except mysql.connector.Error as err:
+                        flash(f"Error en la base de datos: {err}", 'error')
+            elif 'remove_column' in request.form:
+                column_name = request.form['column_name']
+                if column_name:
+                    try:
+                        conn = mysql.connector.connect(**db_config)
+                        cursor = conn.cursor()
+                        cursor.execute(f"ALTER TABLE jornadas_academicas DROP COLUMN `{column_name}`")
+                        conn.commit()
+                        cursor.close()
+                        conn.close()
+                        flash('Columna eliminada con éxito', 'success')
+                    except mysql.connector.Error as err:
+                        flash(f"Error en la base de datos: {err}", 'error')
         try:
             conn = mysql.connector.connect(**db_config)
             cursor = conn.cursor()
+            cursor.execute("SHOW COLUMNS FROM jornadas_academicas")
+            columns = [row[0] for row in cursor.fetchall() if row[0] not in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres', 'Estado', 'Atendidos']]  # Cambio necesario aquí
+            if 'Conteo' in columns:
+                conteo_column = columns.index('Conteo')
+                columns = columns[:conteo_column]
+                columns.append('Conteo')
+
             cursor.execute("SELECT * FROM jornadas_academicas")
             alumnos = cursor.fetchall()
-        except mysql.connector.Error as err:
-            error = f"Error en la base de datos: {err}"
-            return render_template('profesores_dashboard.html', error=error)
-        finally:
             cursor.close()
             conn.close()
-        return render_template('profesores_dashboard.html', alumnos=alumnos)
-    else:
-        return redirect(url_for('login_profesores'))
+
+            # Convertir resultados a una lista de diccionarios
+            column_names = ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres'] + columns + ['Estado', 'Atendidos']
+            alumnos_dict = [dict(zip(column_names, row)) for row in alumnos]  # Cambio necesario aquí
+
+            # Contar valores no nulos
+            for row in alumnos_dict:
+                count = sum(1 for key in row if key not in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres', 'Conteo', 'Estado', 'Atendidos'] and row[key] is not None)
+                row['Conteo'] = count  # Cambio necesario aquí
+            
+            return render_template('profesores_dashboard.html', alumnos=alumnos_dict, columns=column_names)
+        except mysql.connector.Error as err:
+            flash(f"Error en la base de datos: {err}", 'error')
+            return redirect(url_for('iniciar_profesores'))
+
+    return redirect(url_for('iniciar_profesores'))
 
 # Método para borrar a un alumno
 @app.route('/alumno_borrar/<string:id>')
