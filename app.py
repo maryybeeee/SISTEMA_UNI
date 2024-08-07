@@ -279,6 +279,23 @@ def delete_value(record_id):
         return redirect(url_for('edit_record', record_id=record_id))
     return redirect(url_for('iniciar_profesores'))
 
+#Metodo para borrar a un alumno
+@app.route('/delete_record/<int:record_id>', methods=['POST'])
+def delete_record(record_id):
+    if 'user_id' in session and session.get('user_role') == 'profesor':
+        try:
+            conn = mysql.connector.connect(**db_config)
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM jornadas_academicas WHERE NoControl = %s", (record_id,))
+            conn.commit()
+            cursor.close()
+            conn.close()
+            flash('Registro eliminado con éxito', 'success')
+        except mysql.connector.Error as err:
+            flash(f"Error en la base de datos: {err}", 'error')
+        return redirect(url_for('profesores_dashboard'))
+    return redirect(url_for('iniciar_profesores'))
+
 #Metodo para el boton de cerrar session
 @app.route('/logout')
 def logout():
