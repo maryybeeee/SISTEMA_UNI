@@ -146,7 +146,7 @@ def profesores_dashboard():
                         conn = mysql.connector.connect(**db_config)
                         cursor = conn.cursor()
                         cursor.execute("SHOW COLUMNS FROM jornadas_academicas")
-                        columns = [row[0] for row in cursor.fetchall() if row[0] not in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres', 'Estado', 'Atendidos']]  # Cambio necesario aquí
+                        columns = [row[0] for row in cursor.fetchall() if row[0] not in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres', 'Estado', 'Atendidos']]
                         if 'Conteo' in columns:
                             conteo_column = columns.index('Conteo')
                             cursor.execute(f"ALTER TABLE jornadas_academicas ADD COLUMN `{column_name}` VARCHAR(255) NOT NULL AFTER `{columns[conteo_column-1]}`")
@@ -171,11 +171,12 @@ def profesores_dashboard():
                         flash('Columna eliminada con éxito', 'success')
                     except mysql.connector.Error as err:
                         flash(f"Error en la base de datos: {err}", 'error')
+
         try:
             conn = mysql.connector.connect(**db_config)
             cursor = conn.cursor()
             cursor.execute("SHOW COLUMNS FROM jornadas_academicas")
-            columns = [row[0] for row in cursor.fetchall() if row[0] not in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres', 'Estado', 'Atendidos']]  # Cambio necesario aquí
+            columns = [row[0] for row in cursor.fetchall() if row[0] not in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres', 'Estado', 'Atendidos']]
             if 'Conteo' in columns:
                 conteo_column = columns.index('Conteo')
                 columns = columns[:conteo_column]
@@ -188,12 +189,12 @@ def profesores_dashboard():
 
             # Convertir resultados a una lista de diccionarios
             column_names = ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres'] + columns + ['Estado', 'Atendidos']
-            alumnos_dict = [dict(zip(column_names, row)) for row in alumnos]  # Cambio necesario aquí
+            alumnos_dict = [dict(zip(column_names, row)) for row in alumnos]
 
-            # Contar valores no nulos
+            # Contar valores vacíos y no vacíos
             for row in alumnos_dict:
-                count = sum(1 for key in row if key not in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres', 'Conteo', 'Estado', 'Atendidos'] and row[key] is not None)
-                row['Conteo'] = count  # Cambio necesario aquí
+                count_non_empty = sum(1 for key in row if key not in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres', 'Conteo', 'Estado', 'Atendidos'] and row[key] not in [None, ''])
+                row['Conteo'] = count_non_empty
             
             return render_template('profesores_dashboard.html', alumnos=alumnos_dict, columns=column_names)
         except mysql.connector.Error as err:
@@ -202,90 +203,81 @@ def profesores_dashboard():
 
     return redirect(url_for('iniciar_profesores'))
 
-# Método para borrar a un alumno
-@app.route('/alumno_borrar/<string:id>')
-def borrarAlumno(id):
-    if 'user_id' in session and session.get('user_role') == 'profesor':  # Validación de permisos
-        try:
-            conn = mysql.connector.connect(**db_config)
-            cursor = conn.cursor()
-            cursor.execute('DELETE FROM alumnos WHERE NoControl = %s', (id,))
-            cursor.execute('DELETE FROM jornadas_academicas WHERE NoControl = %s', (id,))
-            conn.commit()
-        except mysql.connector.Error as err:
-            error = f"Error en la base de datos: {err}"
-            return render_template('profesores_dashboard.html', error=error)
-        finally:
-            cursor.close()
-            conn.close()
-        return redirect(url_for('profesores_dashboard'))
-    else:
-        return redirect(url_for('login_profesores'))
-
 #Metodo para ir a la ruta para actualizar el alumno
-@app.route('/actualizar_alumno/<string:id>')
-def actualizarAlumnoDashboard(id):
-    if 'user_id' in session and session.get('user_role') == 'profesor':
-        try:
-            conn = mysql.connector.connect(**db_config)
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM jornadas_academicas WHERE NoControl = %s", (id,))
-            registro = cursor.fetchall()
-        except mysql.connector.Error as err:
-            error = f"Error en la base de datos: {err}"
-            return render_template("/action_pages/actualizar_alumno.html", error=error)
-        finally:
-            cursor.close()
-            conn.close()
-        return render_template("/action_pages/actualizar_alumno.html", registro=registro)
-    else:
-        return redirect(url_for('login_profesores'))
-
-#Metodo para actualizar el registro de un alumno
-@app.route('/actualizar_alumno/<string:id>', methods=['POST'])
-def actualizarAlumno(id):
+@app.route('/edit_record/<int:record_id>', methods=['GET', 'POST'])
+def edit_record(record_id):
     if 'user_id' in session and session.get('user_role') == 'profesor':
         if request.method == 'POST':
-            no_control = request.form.get("noControl")
-            apellidoP = request.form.get("apellidoP")
-            apellidoM = request.form.get("apellidoM")
-            nombres = request.form.get("nombre")
-            estado = request.form.get("estado")
-            atendido = request.form.get("atendidos")
-            estado_bool = estado == "Liberado"
-            atendido_bool = atendido == "Atendido"
-            try:
-                conn = mysql.connector.connect(**db_config)
-                cursor = conn.cursor()
-                cursor.execute('UPDATE jornadas_academicas SET NoControl = %s, ApellidoP = %s, ApellidoM = %s, Nombres = %s, Estado = %s, Atendidos = %s WHERE NoControl = %s',(no_control, apellidoP, apellidoM, nombres, estado_bool, atendido_bool, id))
-                conn.commit()
-            except mysql.connector.Error as err:
-                error = f"Error en la base de datos: {err}"
-                return render_template("/action_pages/actualizar_alumno.html", error=error)
-            finally:
-                cursor.close()
-                conn.close()
+            if 'save_changes' in request.form:
+                try:
+                    conn = mysql.connector.connect(**db_config)
+                    cursor = conn.cursor()
+
+                    # Guardar los cambios de las celdas
+                    for column, value in request.form.items():
+                        if column not in ['NoControl', 'save_changes', 'columns_to_clear']:
+                            cursor.execute(f"UPDATE jornadas_academicas SET `{column}` = %s WHERE NoControl = %s", (value, record_id))
+
+                    # Eliminar los valores que se han marcado para eliminar
+                    columns_to_clear = request.form.getlist('columns_to_clear')
+                    for column_name in columns_to_clear:
+                        cursor.execute(f"UPDATE jornadas_academicas SET `{column_name}` = NULL WHERE NoControl = %s", (record_id,))
+
+                    conn.commit()
+                    cursor.close()
+                    conn.close()
+                    flash('Cambios guardados con éxito', 'success')
+                    return redirect(url_for('profesores_dashboard'))
+                except mysql.connector.Error as err:
+                    flash(f"Error en la base de datos: {err}", 'error')
+
+            elif 'delete_record' in request.form:
+                try:
+                    conn = mysql.connector.connect(**db_config)
+                    cursor = conn.cursor()
+                    cursor.execute("DELETE FROM jornadas_academicas WHERE NoControl = %s", (record_id,))
+                    conn.commit()
+                    cursor.close()
+                    conn.close()
+                    flash('Registro eliminado con éxito', 'success')
+                    return redirect(url_for('profesores_dashboard'))
+                except mysql.connector.Error as err:
+                    flash(f"Error en la base de datos: {err}", 'error')
+
+        try:
+            conn = mysql.connector.connect(**db_config)
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("SELECT * FROM jornadas_academicas WHERE NoControl = %s", (record_id,))
+            record = cursor.fetchone()
+            cursor.close()
+            conn.close()
+            if record:
+                return render_template('action_pages/actualizar_alumno.html', record=record)
+            else:
+                flash('Registro no encontrado', 'error')
+                return redirect(url_for('profesores_dashboard'))
+        except mysql.connector.Error as err:
+            flash(f"Error en la base de datos: {err}", 'error')
             return redirect(url_for('profesores_dashboard'))
-        return render_template("/action_pages/actualizar_alumno.html")
-    else:
-        return redirect(url_for('login_profesores'))
-    
-@app.route('/vaciar_dato/<int:no_control>/<string:year>', methods=['GET'])
-def vaciar_dato(no_control, year):
-    try:
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor()
-        
-        # Determina el nombre de la columna basado en el año
-        year_column = year
-        cursor.execute(f"UPDATE jornadas_academicas SET `{year_column}` = NULL WHERE NoControl = %s", (no_control,))
-        conn.commit()
-        return redirect(url_for('actualizar_datos'))
-    except mysql.connector.Error as err:
-        return f"Error en la base de datos: {err}"
-    finally:
-        cursor.close()
-        conn.close()
+    return redirect(url_for('iniciar_profesores'))
+
+#Metodo para eliminar el valor de una celda
+@app.route('/delete_value/<int:record_id>', methods=['POST'])
+def delete_value(record_id):
+    column_name = request.form.get('column_name')
+    if 'user_id' in session and session.get('user_role') == 'profesor':
+        try:
+            conn = mysql.connector.connect(**db_config)
+            cursor = conn.cursor()
+            cursor.execute(f"UPDATE jornadas_academicas SET `{column_name}` = NULL WHERE NoControl = %s", (record_id,))
+            conn.commit()
+            cursor.close()
+            conn.close()
+            flash('Valor eliminado con éxito', 'success')
+        except mysql.connector.Error as err:
+            flash(f"Error en la base de datos: {err}", 'error')
+        return redirect(url_for('edit_record', record_id=record_id))
+    return redirect(url_for('iniciar_profesores'))
 
 #Metodo para el boton de cerrar session
 @app.route('/logout')

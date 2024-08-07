@@ -1,64 +1,54 @@
 {% extends 'layout.html' %}
-{% block title %}Actualizar alumno{% endblock %}
+{% block title %}Actualizar Alumno{% endblock %}
 {% block content %}
 <head>
-    <link rel="stylesheet" href="url_for('staric', 'js/actualizar_alumno.js')">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/actualizar_alumno.css') }}">
 </head>
 <body>
     <h2>Actualizar valor del Alumno</h2>
     <div class="container">
-        {% for valor in registro %}    
-        <form action="/actualizar_alumno/{{ valor.0 }}" method="post">
-            <label for="noControl">No. Control:</label>
-            <input type="text" id="noControl" name="noControl" value="{{ valor.0 }}" required><br><br>
-        
-            <label for="apellidoP">Apellido Paterno:</label>
-            <input type="text" id="apellidoP" name="apellidoP" value="{{ valor.1 }}" required><br><br>
-        
-            <label for="apellidoM">Apellido Materno:</label>
-            <input type="text" id="apellidoM" name="apellidoM" value="{{ valor.2 }}" required><br><br>
-        
-            <label for="nombre">Nombre(s):</label>
-            <input type="text" id="nombre" name="nombre" value="{{ valor.3 }}" required><br><br>
-        
-            <div class="form-group">
-                <label for="year_2019">2019:</label>
-                <button type="button" onclick="vaciarDato('{{ valor.4 }}', '2019')">Vaciar</button>
-            </div>
-        
-            <div class="form-group">
-                <label for="year_2021">2021:</label>
-                <button type="button" onclick="vaciarDato('{{ valor.5 }}', '2021')">Vaciar</button>
-            </div>
-        
-            <div class="form-group">
-                <label for="year_2022">2022:</label>
-                <button type="button" onclick="vaciarDato('{{ valor.6 }}', '2022')">Vaciar</button>
-            </div>
-        
-            <div class="form-group">
-                <label for="year_2023">2023:</label>
-                <button type="button" onclick="vaciarDato('{{ valor.7 }}', '2023')">Vaciar</button>
-            </div>
-        
-            <label for="estado">Estado:</label>
-            <select id="estado" name="estado">
-                <option value="0" {% if valor.10 == 0 %}selected{% endif %}>No liberado</option>
-                <option value="1" {% if valor.10 == 1 %}selected{% endif %}>Liberado</option>
-            </select><br><br>
-        
-            <label for="atendidos">Atendidos:</label>
-            <select id="atendidos" name="atendidos">
-                <option value="0" {% if valor.11 == 0 %}selected{% endif %}>No atendido</option>
-                <option value="1" {% if valor.11 == 1 %}selected{% endif %}>Atendido</option>
-            </select><br><br>
-        
-            <div class="form-actions">
-                <button type="submit">Actualizar Registro</button>
-                <button href="{{ url_for('profesores_dashboard') }}" class="button">Volver</button>
-            </div>
-        </form>
-        {% endfor %}
+        <form action="{{ url_for('edit_record', record_id=record['NoControl']) }}" method="post">
+            {% for column, value in record.items() %}
+                {% if column not in ['NoControl', 'Conteo'] %}
+                <div class="form-group">
+                    <label for="{{ column }}">{{ column }}:</label>
+                    {% if column in ['ApellidoP', 'ApellidoM', 'Nombres'] %}
+                    <input type="text" name="{{ column }}" id="{{ column }}" value="{{ value if value is not none else '' }}">
+                    {% elif column == 'Estado' %}
+                    <select name="Estado" id="Estado">
+                        <option value="0" {{ value == 0 and 'selected' }}>No liberado</option>
+                        <option value="1" {{ value == 1 and 'selected' }}>Liberado</option>
+                    </select>
+                    {% elif column == 'Atendidos' %}
+                    <select name="Atendidos" id="Atendidos">
+                        <option value="0" {{ value == 0 and 'selected' }}>No atendido</option>
+                        <option value="1" {{ value == 1 and 'selected' }}>Atendido</option>
+                    </select>
+                    {% else %}
+                    <!-- Botón para eliminar el valor de esta celda -->
+                    <input type="checkbox" name="columns_to_clear" value="{{ column }}" {% if not value %}disabled{% endif %}> Eliminar valor de esta celda
+                    {% endif %}
+                </div>
+                {% endif %}
+            {% endfor %}
+            <button type="submit" name="save_changes">Guardar Cambios</button>
+        </form>                
     </div>
+    <script>
+        function deleteValue(column) {
+            const form = document.createElement('form');
+            form.method = 'post';
+            form.action = `{{ url_for('edit_record', record_id=record['NoControl']) }}`;
+            
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'column_name';
+            input.value = column;
+            form.appendChild(input);
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
 </body>
 {% endblock %}

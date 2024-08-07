@@ -46,19 +46,35 @@
             <tr>
                 {% for column in columns %}
                 <td>
-                    {% if columns.index(column) > columns.index('Nombres') and columns.index(column) < columns.index('Conteo') %}
-                    {% if row[column] is none or row[column] == '' %}
-                    <i class="fas fa-times"></i>
+                    {% if column == 'Estado' %}
+                        {% if row[column] == 0 %}
+                            No liberado
+                        {% elif row[column] == 1 %}
+                            Liberado
+                        {% else %}
+                            {{ row[column] }}
+                        {% endif %}
+                    {% elif column == 'Atendidos' %}
+                        {% if row[column] == 0 %}
+                            No atendido
+                        {% elif row[column] == 1 %}
+                            Atendido
+                        {% else %}
+                            {{ row[column] }}
+                        {% endif %}
+                    {% elif columns.index(column) > columns.index('Nombres') and columns.index(column) < columns.index('Conteo') %}
+                        {% if row[column] is none or row[column] == '' %}
+                            <i class="fas fa-times"></i>
+                        {% else %}
+                            <i class="fas fa-check"></i>
+                        {% endif %}
                     {% else %}
-                    <i class="fas fa-check"></i>
-                    {% endif %}
-                    {% else %}
-                    {{ row[column] if column in row else '' }}
+                        {{ row[column] if column in row else '' }}
                     {% endif %}
                 </td>
                 {% endfor %}
                 <td>
-                    <!-- Aquí puedes agregar botones u otras acciones si es necesario -->
+                    <a href="{{ url_for('edit_record', record_id=row['NoControl']) }}" class="btn">Editar</a>
                 </td>
             </tr>
             {% endfor %}
