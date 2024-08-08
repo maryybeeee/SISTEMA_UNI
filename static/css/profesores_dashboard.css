@@ -1,22 +1,17 @@
-
-.class0 {
-    background-color: #ff0000;
+.button-container {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
-.class1 {
-    background-color: #f1eea7;
-}
-
-.class2 {
-    background-color: #F9FF01;
-}
-
-.class3 {
-    background-color: #41dd41;
-}
-
-.class4 {
-    background-color: #007000;
+.button-container button {
+    flex: 1;
+    max-width: 100%;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
 }
 
 .table {
@@ -63,7 +58,7 @@
     margin-top: 10px;
     padding: 10px 20px;
     background-color: #0e286e;
-    color: #fff;
+    color: #ffffff;
     text-decoration: none;
     border-radius: 4px;
     transition: background-color 0.3s ease;
@@ -73,24 +68,35 @@
     background-color: #575757;
 }
 
-.btn {
-    padding: 10px 15px;
-    border: none;
+.table td a{
+    background-color: #033a6a;
+    padding: 5px;
     border-radius: 5px;
-    cursor: pointer;
-}
-
-.btn-danger {
-    background-color: #dc3545;
-    color: white;
-}
-
-.btn-primary {
-    background-color: #007bff;
-    color: white;
     text-decoration: none;
+    color: #ffffff;
 }
-.btn-danger:hover, .btn-primary:hover {
-    background-color: #d4912b;
+.table td a:hover{
+    background-color: #0056b3;
 }
 
+/* Estilo del contenedor del checkbox */
+.checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    font-size: 18px; /* Tamaño de la fuente más grande */
+    margin-bottom: 15px;
+}
+
+/* Estilo del checkbox */
+.checkbox-wrapper input[type="checkbox"] {
+    width: 24px; /* Tamaño del checkbox */
+    height: 24px;
+    margin-right: 10px; /* Espacio entre el checkbox y la etiqueta */
+    cursor: pointer; /* Cambia el cursor al pasar sobre el checkbox */
+}
+
+/* Estilo del texto del label */
+.checkbox-wrapper label {
+    font-size: 18px; /* Tamaño de la fuente del texto del label */
+    cursor: pointer; /* Cambia el cursor al pasar sobre el texto */
+}

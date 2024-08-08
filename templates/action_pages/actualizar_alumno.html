@@ -2,7 +2,7 @@
 {% block title %}Actualizar Alumno{% endblock %}
 {% block content %}
 <head>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/actualizar_alumno.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/profesores_dashboard.css') }}">
 </head>
 <body>
     <h2>Actualizar valor del Alumno</h2>
@@ -26,7 +26,11 @@
                     </select>
                     {% else %}
                     <!-- Botón para eliminar el valor de esta celda -->
-                    <input type="checkbox" name="columns_to_clear" value="{{ column }}" {% if not value %}disabled{% endif %}> Eliminar valor de esta celda
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="large_checkbox" name="columns_to_clear" value="{{ column }}" {% if not value %}disabled{% endif %}>
+                        <label for="large_checkbox">Eliminar valor de esta celda</label>
+                    </div>
+                    
                     {% endif %}
                 </div>
                 {% endif %}

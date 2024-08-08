@@ -10,26 +10,25 @@
     </script>    
 </head>
 <body>
-    <center><h2>Jornadas Académicas</h2></center>
+    <h2>Jornadas Académicas</h2>
     <div class="container">
-        <div class="container">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <ul class="flashes">
-                    {% for category, message in messages %}
-                        <li class="{{ category }}">{{ message }}</li>
-                    {% endfor %}
-                    </ul>
-                {% endif %}
-            {% endwith %}
-        </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
         <form method="post">
-            <div>
-                <label for="column_name">Nombre de la columna:</label>
-                <input type="text" id="column_name" name="column_name" required>
+            <div class="form-group">
+                <input type="text" id="column_name" name="column_name" placeholder="Agrega/Elimina una columna" required>
             </div>
-            <button type="submit" name="add_column">Agregar Columna</button>
-            <button type="submit" name="remove_column">Eliminar Columna</button>
+            <div class="button-container">
+                <button type="submit" name="add_column">Agregar Columna</button>
+                <button type="submit" name="remove_column">Eliminar Columna</button>
+            </div>
         </form>
     </div>
     <table class="table table-bordered table-striped">
@@ -74,7 +73,7 @@
                 </td>
                 {% endfor %}
                 <td>
-                    <a href="{{ url_for('edit_record', record_id=row['NoControl']) }}" class="btn">Editar</a>
+                    <a href="{{ url_for('edit_record', record_id=row['NoControl']) }}">Editar</a>
                 </td>
             </tr>
             {% endfor %}

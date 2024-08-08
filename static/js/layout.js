@@ -83,3 +83,10 @@ function deleteValue(column) {
     document.body.appendChild(form);
     form.submit();
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    var loadingScreen = document.getElementById('loading-screen');
+    setTimeout(function() {
+        loadingScreen.classList.add('hidden');
+    }, 500); // Tiempo de espera antes de ocultar la pantalla de carga
+});
