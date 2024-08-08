@@ -1,38 +1,43 @@
 {% extends 'layout.html' %}
-{% block title %}Registrar - Alumnos{% endblock %}
+{% block title %}Registro de Alumnos{% endblock %}
 {% block content %}
-<div class="container">
-    <h2>Registrar - Alumnos</h2>
-    <form action="{{ url_for('registro_alumnos') }}" method="post">
-        <div class="form-group">
-            <label for="nombres">Nombres:</label>
-            <input type="text" id="nombres" name="nombres" required>
-        </div>
-        <div class="form-group">
-            <label for="apellido_paterno">Apellido Paterno:</label>
-            <input type="text" id="apellido_paterno" name="apellido_paterno" required>
-        </div>
-        <div class="form-group">
-            <label for="apellido_materno">Apellido Materno:</label>
-            <input type="text" id="apellido_materno" name="apellido_materno" required>
-        </div>
-        <div class="form-group">
-            <label for="correo">Correo:</label>
-            <input type="email" id="correo" name="correo" required>
-        </div>
-        <div class="form-group">
-            <label for="no_control">No. de Control:</label>
-            <input type="number" id="no_control" name="no_control" required>
-        </div>
-        <div class="form-group password-container">
-            <label for="contraseña">Contraseña:</label>
-            <input type="password" id="contraseña" name="contraseña" minlength="3" required>
-        </div>
-        <input type="hidden" id="alumno" name="alumno" value="alumno">
-        <button type="submit">Registrarse</button>
-        {% if error %}
-            <div class="error">{{ error }}</div>
-        {% endif %}
-    </form>
-</div>
+<body>
+    <div class="container">
+        <h2>Registro de Alumnos</h2>
+        <form action="{{ url_for('registro_alumnos') }}" method="post">
+            <div class="form-group">
+                <label for="names">Nombres:</label>
+                <input type="text" id="names" name="names" required>
+            </div>
+            <div class="form-group">
+                <label for="last_name1">Apellido Paterno:</label>
+                <input type="text" id="last_name1" name="last_name1" required>
+            </div>
+            <div class="form-group">
+                <label for="last_name2">Apellido Materno:</label>
+                <input type="text" id="last_name2" name="last_name2" required>
+            </div>
+            <div class="form-group">
+                <label for="control_number">No. de Control:</label>
+                <input type="number" id="control_number" name="control_number" required>
+            </div>
+            <div class="form-group password-container">
+                <label for="password">Contraseña:</label>
+                <input type="password" id="password" name="password" minlength="6" required>
+                <span class="toggle-password" onclick="togglePasswordVisibility('password', this)">👁️</span>
+            </div>
+            <button type="submit">Registrarse</button>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <ul class="flashes">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+        </form>
+        <script src="{{ url_for('static', filename='js/layout.js') }}"></script>
+    </div>
+</body>
 {% endblock %}

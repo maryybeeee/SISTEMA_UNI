@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Función para abrir el menú lateral
     function openSideMenu() {
-        sideMenu.style.width = '300px';
+        sideMenu.style.width = '350px';
     }
 
     // Función para cerrar el menú lateral
@@ -32,7 +32,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Evitar que el clic dentro del menú cierre el menú
     sideMenu.addEventListener('click', function(event) {
         event.stopPropagation();
     });
@@ -49,3 +48,38 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+document.addEventListener("DOMContentLoaded", function() {
+    setTimeout(function() {
+        var flashes = document.querySelectorAll('.flashes li');
+        flashes.forEach(function(flash) {
+            flash.style.display = 'none';
+        });
+    }, 3000);
+});
+
+function togglePasswordVisibility(passwordFieldId, iconElement) {
+    var passwordField = document.getElementById(passwordFieldId);
+    if (passwordField.type === "password") {
+        passwordField.type = "text";
+        iconElement.textContent = "🙈";
+    } else {
+        passwordField.type = "password";
+        iconElement.textContent = "👁️";
+    }
+}
+
+function deleteValue(column) {
+    const form = document.createElement('form');
+    form.method = 'post';
+    form.action = `{{ url_for('edit_record', record_id=record['NoControl']) }}`;
+    
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'column_name';
+    input.value = column;
+    form.appendChild(input);
+    
+    document.body.appendChild(form);
+    form.submit();
+}

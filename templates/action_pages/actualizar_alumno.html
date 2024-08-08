@@ -37,21 +37,6 @@
             </form>
         </form>                
     </div>
-    <script>
-        function deleteValue(column) {
-            const form = document.createElement('form');
-            form.method = 'post';
-            form.action = `{{ url_for('edit_record', record_id=record['NoControl']) }}`;
-            
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'column_name';
-            input.value = column;
-            form.appendChild(input);
-            
-            document.body.appendChild(form);
-            form.submit();
-        }
-    </script>
+    <script src="{{ url_for('static', filename='js/layout.js') }}"></script>
 </body>
 {% endblock %}

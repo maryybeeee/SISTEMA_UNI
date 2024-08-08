@@ -1,45 +1,41 @@
-/* Importar la fuente Questrial */
 @import url('https://fonts.googleapis.com/css2?family=Questrial&display=swap');
 
-/* Estilo para el cuerpo del documento */
 body {
     font-family: 'Questrial', sans-serif;
     margin: 0;
     padding: 0;
     display: flex;
     flex-direction: column;
-    min-height: 100vh; /* Cambiado a 100vh */
+    min-height: 100vh;
     background-color: #f4f4f4;
 }
 
-/* Estilo para el contenedor principal */
-#content {
-    flex: 1;
+.content {
+    color: #666666;
+    line-height: 1.6;
+    margin-bottom: 15px;
 }
 
-/* Estilos para el contenedor de los logos */
-.logos-container {
+.logo-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #fff;
-    color: #333;
+    background-color: #ffffff;
+    color: #333333;
     padding: 10px 40px;
 }
 
-/* Estilos para las imágenes de los logos */
-.logos-container img {
+.logo-container img {
     max-height: 120px;
     margin: 0 10px; 
 }
 
-/* Estilos para la barra de menú */
 header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #0e286e;
-    color: #fff;
+    background-color: #033a6a;
+    color: #ffffff;
     padding: 10px 40px;
 }
 
@@ -62,45 +58,18 @@ header {
 }
 
 .menu-bar ul li a {
-    color: #fff;
+    color: #ffffff;
     text-decoration: none;
 }
 
 .menu-icon {
-    font-size: 24px; 
+    font-size: 30px;
 }
 
-/* Estilos para el contenido principal */
-.main {
-    margin: 20px;
+.menu-bar i:hover{
+    cursor: pointer;
 }
 
-/* Estilos para el pie de página */
-footer {
-    background-color: #0e286e;
-    color: #fff;
-    padding: 20px;
-    text-align: center;
-}
-
-.footer-content {
-    display: flex;
-    justify-content: space-between;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-.contact-info, .legal-info {
-    flex: 1;
-    padding: 10px;
-}
-
-.separator {
-    border-top: 1px solid #fff;
-    margin: 30px 0;
-}
-
-/* Estilos para el menú lateral */
 .side-menu {
     height: 100%;
     width: 0px; 
@@ -108,17 +77,27 @@ footer {
     z-index: 1;
     top: 0;
     right: 0;
-    background-color: #0e286e;
+    background-color: #033a6a;
     overflow-x: hidden;
     transition: 0.5s;
     padding-top: 60px;
 }
 
+.side-menu .close-btn {
+    position: absolute;
+    border-radius: 45%;
+    top: 0%;
+    right: 0%;
+    font-size: 25px;
+    cursor: pointer;
+}
+
 .side-menu a {
+    margin-top: 15px;
     padding: 10px 15px;
     text-decoration: none;
-    font-size: 18px;
-    color: #fff;
+    font-size: 22px;
+    color: #ffffff;
     display: flex;
     align-items: center;
     transition: 0.3s;
@@ -127,30 +106,49 @@ footer {
 
 .side-menu a i {
     margin-right: 10px;
-    font-size: 20px;
+    font-size: 25px;
 }
 
-.side-menu a:hover {
-    background-color: #575757;
+.side-menu a:hover{
+    background-color: #666666;
 }
 
-.side-menu .close-btn {
-    position: absolute;
-    border-radius: 50%;
-    padding: 15px;
-    top: 0%;
-    right: 0%;
-    font-size: 30px;
+.flashes {
+    list-style-type: none;
+    padding: 0;
 }
 
-/* Ajustes para el formulario de inicio de sesión de alumnos */
+.flashes li {
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 5px;
+}
+.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.info {
+    background-color: #c1e6e9;
+    color: #2275d3;
+}
+
+.main {
+    margin: 20px;
+}
+
 .container {
     max-width: 600px;
     margin: 50px auto;
-    background-color: #fff;
+    background-color: #ffffff;
     padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 0 10px #0000001a;
 }
 
 h2 {
@@ -183,7 +181,7 @@ select {
 button {
     width: 100%;
     padding: 10px;
-    background-color: #007bff;
+    background-color: #033a6a;
     color: #fff;
     border: none;
     border-radius: 5px;
@@ -195,31 +193,46 @@ button:hover {
     background-color: #0056b3;
 }
 
-/* Estilos específicos para el campo de contraseña */
 .form-group.password-container {
     position: relative;
+    width: 100%;
 }
 
 .form-group.password-container input[type="password"],
-.form-group.password-container input[type="text"] {
+.form-group.password-container input[type="text"]{
     width: calc(100% - 36px);
     padding-right: 36px;
     box-sizing: border-box;
 }
 
-.form-group.password-container .password-toggle {
+.form-group.password-container .toggle-password {
     position: absolute;
-    top: 50%;
-    right: 10px;
+    top: 62%;
+    font-size: 1.5em;
     transform: translateY(-50%);
     cursor: pointer;
     color: #ccc;
 }
 
-.error{
-    color: white;
-    border-radius: 10px;
-    margin-top: 30px;
+footer {
+    background-color: #033a6a;
+    color: #ffffff;
     padding: 20px;
-    background-color: #ff0000;
+    text-align: center;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.contact-info, .legal-info {
+    flex: 1;
+    padding: 10px;
+}
+
+#content {
+    flex: 1;
 }

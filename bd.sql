@@ -30,7 +30,6 @@ CREATE TABLE alumnos (
     Nombres VARCHAR(50) NOT NULL,
     ApellidoP VARCHAR(25) NOT NULL,
     ApellidoM VARCHAR(25) NOT NULL,
-    Correo VARCHAR(100) NOT NULL,
     Contraseña VARCHAR(100) NOT NULL,
     NoControl INT UNIQUE NOT NULL,
     UNIQUE KEY (Contraseña),
