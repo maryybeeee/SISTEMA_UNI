@@ -3,6 +3,17 @@
 {% block content %}
 <body>
     <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+    </div>
+    <div class="container">
         <h2 class="title">Sistema de Gestión Académica</h2>
         <p class="intro">Bienvenido al Sistema de Gestión Académica, una plataforma integral diseñada para facilitar la administración y seguimiento de las actividades académicas y tutorías de los alumnos. Nuestro sistema ofrece una variedad de funcionalidades que permiten tanto a los alumnos como a los profesores gestionar y visualizar información relevante de manera eficiente y organizada.</p>
 
