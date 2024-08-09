@@ -1,10 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
-import bcrypt, logging, mysql.connector
+import bcrypt
+import mysql.connector
+import logging
+from config import db_config, secret_key
+from datetime import timedelta
 
-# Configuración de la base de datos
-db_config = {'user': 'root', 'host': 'localhost', 'database': 'bd'}
 app = Flask(__name__)
-app.secret_key = 'MiguelProyectoIta009.'
+app.secret_key = secret_key
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 
 # Ruta que se mostrará al ingresar en la página
 @app.route('/')
@@ -103,7 +106,7 @@ def login_profesores():
     return render_template('login_profesores.html')
 
 # Método para que los profesores inicien sesión
-@app.route('/iniciar_profesores', methods=['GET', 'POST'])
+@app.route('/iniciar_profesores', methods=['POST', 'GET'])
 def iniciar_profesores():
     if request.method == 'POST':
         worker_number = request.form.get('worker_number')
@@ -131,7 +134,7 @@ def iniciar_profesores():
     return render_template('login_profesores.html')
 
 # Ruta para mostrar la tabla de las jornadas académicas de los alumnos
-@app.route('/profesores_dashboard', methods=['GET', 'POST'])
+@app.route('/profesores_dashboard', methods=['POST', 'GET'])
 def profesores_dashboard():
     if 'user_id' in session and session.get('user_role') == 'profesor':
         if request.method == 'POST':
@@ -149,11 +152,12 @@ def profesores_dashboard():
                         else:
                             cursor.execute(f"ALTER TABLE jornadas_academicas ADD COLUMN `{column_name}` VARCHAR(255) NOT NULL")
                         conn.commit()
-                        cursor.close()
-                        conn.close()
                         flash('Columna agregada con éxito', 'success')
                     except mysql.connector.Error as err:
                         flash(f"Error en la base de datos: {err}", 'error')
+                    finally:
+                        cursor.close()
+                        conn.close()
             elif 'remove_column' in request.form:
                 column_name = request.form['column_name']
                 if column_name:
@@ -162,11 +166,12 @@ def profesores_dashboard():
                         cursor = conn.cursor()
                         cursor.execute(f"ALTER TABLE jornadas_academicas DROP COLUMN `{column_name}`")
                         conn.commit()
-                        cursor.close()
-                        conn.close()
                         flash('Columna eliminada con éxito', 'success')
                     except mysql.connector.Error as err:
                         flash(f"Error en la base de datos: {err}", 'error')
+                    finally:
+                        cursor.close()
+                        conn.close()
         try:
             conn = mysql.connector.connect(**db_config)
             cursor = conn.cursor()
@@ -178,8 +183,6 @@ def profesores_dashboard():
                 columns.append('Conteo')
             cursor.execute("SELECT * FROM jornadas_academicas")
             alumnos = cursor.fetchall()
-            cursor.close()
-            conn.close()
             column_names = ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres'] + columns + ['Estado', 'Atendidos']
             alumnos_dict = [dict(zip(column_names, row)) for row in alumnos]
             for row in alumnos_dict:
@@ -189,6 +192,9 @@ def profesores_dashboard():
         except mysql.connector.Error as err:
             flash(f"Error en la base de datos: {err}", 'error')
             return redirect(url_for('iniciar_profesores'))
+        finally:
+            cursor.close()
+            conn.close()
     return redirect(url_for('iniciar_profesores'))
 
 #Metodo para ir a la ruta para actualizar el alumno
@@ -207,31 +213,31 @@ def edit_record(record_id):
                     for column_name in columns_to_clear:
                         cursor.execute(f"UPDATE jornadas_academicas SET `{column_name}` = NULL WHERE NoControl = %s", (record_id,))
                     conn.commit()
-                    cursor.close()
-                    conn.close()
                     flash('Cambios guardados con éxito', 'success')
                     return redirect(url_for('profesores_dashboard'))
                 except mysql.connector.Error as err:
                     flash(f"Error en la base de datos: {err}", 'error')
+                finally:
+                    cursor.close()
+                    conn.close()
             elif 'delete_record' in request.form:
                 try:
                     conn = mysql.connector.connect(**db_config)
                     cursor = conn.cursor()
                     cursor.execute("DELETE FROM jornadas_academicas WHERE NoControl = %s", (record_id,))
                     conn.commit()
-                    cursor.close()
-                    conn.close()
                     flash('Registro eliminado con éxito', 'success')
                     return redirect(url_for('profesores_dashboard'))
                 except mysql.connector.Error as err:
                     flash(f"Error en la base de datos: {err}", 'error')
+                finally:
+                    cursor.close()
+                    conn.close()
         try:
             conn = mysql.connector.connect(**db_config)
             cursor = conn.cursor(dictionary=True)
             cursor.execute("SELECT * FROM jornadas_academicas WHERE NoControl = %s", (record_id,))
             record = cursor.fetchone()
-            cursor.close()
-            conn.close()
             if record:
                 return render_template('action_pages/actualizar_alumno.html', record=record)
             else:
@@ -240,6 +246,9 @@ def edit_record(record_id):
         except mysql.connector.Error as err:
             flash(f"Error en la base de datos: {err}", 'error')
             return redirect(url_for('profesores_dashboard'))
+        finally:
+            cursor.close()
+            conn.close()
     return redirect(url_for('iniciar_profesores'))
 
 #Metodo para eliminar SOLO el valor de una celda
@@ -252,11 +261,12 @@ def delete_value(record_id):
             cursor = conn.cursor()
             cursor.execute(f"UPDATE jornadas_academicas SET `{column_name}` = NULL WHERE NoControl = %s", (record_id,))
             conn.commit()
-            cursor.close()
-            conn.close()
             flash('Valor eliminado con éxito', 'success')
         except mysql.connector.Error as err:
             flash(f"Error en la base de datos: {err}", 'error')
+        finally:
+            cursor.close()
+            conn.close()
         return redirect(url_for('edit_record', record_id=record_id))
     return redirect(url_for('iniciar_profesores'))
 
@@ -269,11 +279,12 @@ def delete_record(record_id):
             cursor = conn.cursor()
             cursor.execute("DELETE FROM jornadas_academicas WHERE NoControl = %s", (record_id,))
             conn.commit()
-            cursor.close()
-            conn.close()
             flash('Registro eliminado con éxito', 'success')
         except mysql.connector.Error as err:
             flash(f"Error en la base de datos: {err}", 'error')
+        finally:
+            cursor.close()
+            conn.close()
         return redirect(url_for('profesores_dashboard'))
     return redirect(url_for('iniciar_profesores'))
 
