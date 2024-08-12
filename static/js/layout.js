@@ -60,12 +60,16 @@ document.addEventListener("DOMContentLoaded", function() {
 
 function togglePasswordVisibility(passwordFieldId, iconElement) {
     var passwordField = document.getElementById(passwordFieldId);
+    var icon = iconElement.querySelector('i');
+    
     if (passwordField.type === "password") {
         passwordField.type = "text";
-        iconElement.textContent = "🙈";
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
     } else {
         passwordField.type = "password";
-        iconElement.textContent = "👁️";
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
     }
 }
 

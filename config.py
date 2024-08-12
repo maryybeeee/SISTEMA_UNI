@@ -8,3 +8,6 @@ db_config = {
 
 #Clave secreta
 secret_key = 'MiguelProyectoIta009.'
+
+#Ruta de subida de rutas de los archivos
+UPLOAD_FOLDER = 'uploads'

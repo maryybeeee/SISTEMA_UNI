@@ -25,10 +25,9 @@
                         <option value="1" {{ value == 1 and 'selected' }}>Atendido</option>
                     </select>
                     {% else %}
-                    <!-- Botón para eliminar el valor de esta celda -->
                     <div class="checkbox-wrapper">
                         {% if value %}
-                            <a href="https://cobblemon.com/en" target="_blank">Reference</a>
+                            <a href="{{ url_for('uploaded_file', filename=record[column]|basename) }}" target="_blank">Ver archivo PDF</a>
                         {% endif %}
                         <div class="direcction">
                             <input type="checkbox" id="large_checkbox" name="columns_to_clear" value="{{ column }}" {% if not value %}disabled{% endif %}>

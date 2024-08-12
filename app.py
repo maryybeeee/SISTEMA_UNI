@@ -1,13 +1,25 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file, send_from_directory, abort
+from config import db_config, secret_key, UPLOAD_FOLDER
+from werkzeug.utils import secure_filename
+from datetime import timedelta
 import bcrypt
 import mysql.connector
 import logging
-from config import db_config, secret_key
-from datetime import timedelta
+import os
+
+ALLOWED_EXTENSIONS = {'pdf'}
 
 app = Flask(__name__)
 app.secret_key = secret_key
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
+app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static/uploads')
+
+@app.template_filter('basename')
+def basename_filter(path):
+    return os.path.basename(path)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Ruta que se mostrará al ingresar en la página
 @app.route('/')
@@ -51,25 +63,57 @@ def registro_alumnos():
             conn.close()
     return render_template('register_alumnos.html')
 
-# Ruta para mostrar los archivos de los alumnos
-@app.route('/alumnos_dashboard')
+# Ruta para servir archivos desde la carpeta de subida
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    if 'user_role' in session and session.get('user_role') == 'profesor':
+        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    else:
+        abort(403)
+
+@app.route('/alumnos_dashboard', methods=['GET', 'POST'])
 def alumnos_dashboard():
     if 'user_id' in session and session.get('user_role') == 'alumno':
         control_number = session['user_id']
+        if request.method == 'POST':
+            no_control = request.form.get('no_control')
+            column_name = request.form.get('column_name')
+            file = request.files['file']
+            if file and no_control and column_name:
+                filename = secure_filename(file.filename)
+                save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(save_path)
+                try:
+                    conn = mysql.connector.connect(**db_config)
+                    cursor = conn.cursor()
+                    cursor.execute(f"UPDATE jornadas_academicas SET `{column_name}` = %s WHERE NoControl = %s", (filename, control_number))
+                    cursor.execute("INSERT INTO Rutas_pdf (no_control, nombre_archivo, ruta_archivo) VALUES (%s, %s, %s)", (control_number, filename, save_path))
+                    conn.commit()
+                    flash('Archivo subido y guardado con éxito', 'success')
+                except mysql.connector.Error as err:
+                    flash(f"Error en la base de datos: {err}", 'error')
+                finally:
+                    cursor.close()
+                    conn.close()
         try:
             conn = mysql.connector.connect(**db_config)
             cursor = conn.cursor()
+            cursor.execute("SHOW COLUMNS FROM jornadas_academicas")
+            all_columns = [row[0] for row in cursor.fetchall()]
+            
+            student_columns = [col for col in all_columns if col not in ['Estado', 'Conteo', 'Atendidos']]
             cursor.execute("SELECT * FROM jornadas_academicas WHERE NoControl = %s", (control_number,))
-            alumno = cursor.fetchall()
+            alumno_data = cursor.fetchall()
+            
+            alumnos_dict = [dict(zip(student_columns, row)) for row in alumno_data]
+            return render_template('alumnos_dashboard.html', alumnos=alumnos_dict, columns=student_columns)
         except mysql.connector.Error as err:
             flash(f"Error en la base de datos: {err}", 'error')
-            return render_template('alumnos_dashboard.html')
+            return redirect(url_for('iniciar_alumnos'))
         finally:
             cursor.close()
             conn.close()
-        return render_template('alumnos_dashboard.html', alumno=alumno)
-    else:
-        return redirect(url_for('login_alumnos'))
+    return redirect(url_for('login_alumnos'))
 
 # Ruta que se mostrará al ingresar en el login de alumnos
 @app.route('/login_alumnos')
@@ -90,6 +134,7 @@ def iniciar_alumnos():
             if user and bcrypt.checkpw(password.encode('utf-8'), user[4].encode('utf-8')):
                 session['user_id'] = user[0]
                 session['user_role'] = 'alumno'
+                session['user_name'] = user[1] + ' ' + user[2] + ' ' + user[3]
                 return redirect(url_for('alumnos_dashboard'))
             else:
                 flash('Número de control o contraseña no valido', 'error')
@@ -121,6 +166,7 @@ def iniciar_profesores():
                 if bcrypt.checkpw(key.encode('utf-8'), user[2].encode('utf-8')):
                     session['user_id'] = user[0]
                     session['user_role'] = 'profesor'
+                    session['user_name'] = user[1]
                     return redirect(url_for('profesores_dashboard'))
                 else:
                     flash('Nombres o clave incorrectos', 'error')
@@ -185,6 +231,14 @@ def profesores_dashboard():
             alumnos = cursor.fetchall()
             column_names = ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres'] + columns + ['Estado', 'Atendidos']
             alumnos_dict = [dict(zip(column_names, row)) for row in alumnos]
+            cursor.execute("SELECT no_control, nombre_archivo, ruta_archivo FROM Rutas_pdf")
+            archivos = cursor.fetchall()
+            archivos_dict = {}
+            for archivo in archivos:
+                no_control = archivo[0]
+                if no_control not in archivos_dict:
+                    archivos_dict[no_control] = []
+                archivos_dict[no_control].append({'nombre': archivo[1], 'ruta': os.path.basename(archivo[2])})
             for row in alumnos_dict:
                 count_non_empty = sum(1 for key in row if key not in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres', 'Conteo', 'Estado', 'Atendidos'] and row[key] not in [None, ''])
                 row['Conteo'] = count_non_empty
@@ -293,6 +347,7 @@ def delete_record(record_id):
 def logout():
     session.pop('user_id', None)
     session.pop('user_role', None)
+    session.pop('user_name', None)
     flash('Has cerrado sesión correctamente.', 'info')
     return redirect(url_for('index'))
 

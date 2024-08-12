@@ -5,7 +5,8 @@ import bcrypt
 db_config = {
     'user': 'root',
     'host': 'localhost',
-    'database': 'bd'
+    'database': 'bd',
+    'password': 'MiguelWorkbench009'
 }
 
 # Datos del profesor
