@@ -25,6 +25,14 @@ CREATE TABLE jornadas_academicas (
   PRIMARY KEY (NoControl)
 );
 
+CREATE TABLE IF NOT EXISTS rutas_pdf (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    no_control INT NOT NULL,
+    nombre_archivo VARCHAR(255) NOT NULL,
+    ruta_archivo VARCHAR(255) NOT NULL,
+    FOREIGN KEY (no_control) REFERENCES jornadas_academicas(NoControl)
+);
+
 CREATE TABLE alumnos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     Nombres VARCHAR(50) NOT NULL,
@@ -32,7 +40,6 @@ CREATE TABLE alumnos (
     ApellidoM VARCHAR(25) NOT NULL,
     Contraseña VARCHAR(100) NOT NULL,
     NoControl INT UNIQUE NOT NULL,
-    UNIQUE KEY (Contraseña),
     FOREIGN KEY (NoControl) REFERENCES jornadas_academicas(NoControl)
 );
 /* Alumnos repetidos con el numero de control

@@ -6,30 +6,18 @@
 </head>
 <body>
     <h1>Bienvenid@ {{ session['user_name'] }}</h1>
-    <div class="container">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <ul class="flashes">
-                {% for category, message in messages %}
-                    <li class="{{ category }}">{{ message }}</li>
-                {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %}
-    </div>
-    <table class="table table-bordered table-striped">
-        <thead>
-            <tr>
-                {% for col in columns %}
-                <th>{{ col }}</th>
-                {% endfor %}
-                <th>Guardar</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in alumnos %}
-            <tr>
-                <form action="" method="POST" enctype="multipart/form-data">
+    <form action="" method="POST" enctype="multipart/form-data">
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    {% for col in columns %}
+                    <th>{{ col }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in alumnos %}
+                <tr>
                     {% for col in columns %}
                     <td>
                         {% if col in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres'] %}
@@ -42,16 +30,25 @@
                         {% endif %}
                     </td>
                     {% endfor %}
-                    <td>
-                        <input type="hidden" name="no_control" value="{{ item['NoControl'] }}" />
-                        <button type="submit">Guardar</button>
-                    </td>
-                </form>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div style="margin-top: 20px;">
+            <button type="submit">Guardar</button>
+        </div>
+    </form>
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+    </div>
     <script>
         document.querySelectorAll('.file-input').forEach(input => {
             input.addEventListener('change', function() {
