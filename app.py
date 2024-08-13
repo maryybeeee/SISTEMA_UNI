@@ -76,6 +76,7 @@ def uploaded_file(user_id, filename):
     else:
         abort(403)
 
+# Ruta para mostrar la tabla de las jornadas académicas de los alumnos para que puedan subir sus archivos
 @app.route('/alumnos_dashboard', methods=['GET', 'POST'])
 def alumnos_dashboard():
     if 'user_id' in session and session.get('user_role') == 'alumno':
@@ -95,28 +96,20 @@ def alumnos_dashboard():
                         conn = mysql.connector.connect(**db_config)
                         cursor = conn.cursor()
                         cursor.execute(f"UPDATE jornadas_academicas SET `{column_name}` = %s WHERE NoControl = %s", (filename, control_number))
-                        
-                        # Insertar en Rutas_pdf
                         cursor.execute("INSERT INTO Rutas_pdf (no_control, nombre_archivo, ruta_archivo) VALUES (%s, %s, %s)", (control_number, filename, save_path))
-                        
                         conn.commit()
                     except mysql.connector.Error as err:
                         flash(f"Error en la base de datos: {err}", 'error')
                     finally:
                         cursor.close()
                         conn.close()
-            
             flash('Archivos subidos y guardados con éxito', 'success')
-        
         try:
             conn = mysql.connector.connect(**db_config)
             cursor = conn.cursor()
-            
-            # Obtener las columnas relevantes para el alumno
             cursor.execute("SHOW COLUMNS FROM jornadas_academicas")
             all_columns = [row[0] for row in cursor.fetchall()]
             student_columns = [col for col in all_columns if col not in ['Estado', 'Conteo', 'Atendidos']]
-            # Obtener los datos del alumno
             cursor.execute("SELECT * FROM jornadas_academicas WHERE NoControl = %s", (control_number,))
             alumno_data = cursor.fetchall()
             alumnos_dict = [dict(zip(student_columns, row)) for row in alumno_data]
@@ -280,7 +273,6 @@ def edit_record(record_id):
                     columns_to_clear = request.form.getlist('columns_to_clear')
                     for column_name in columns_to_clear:
                         cursor.execute(f"UPDATE jornadas_academicas SET `{column_name}` = NULL WHERE NoControl = %s", (record_id,))
-                        # También eliminar el archivo asociado con esta columna
                         cursor.execute("SELECT ruta_archivo FROM Rutas_pdf WHERE no_control = %s AND nombre_archivo = %s", (record_id, column_name))
                         file_path = cursor.fetchone()
                         if file_path:
@@ -355,45 +347,32 @@ def delete_record(record_id):
     try:
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
-
-        # Obtener la ruta del archivo PDF desde la tabla Rutas_pdf
         cursor.execute("SELECT ruta_archivo FROM Rutas_pdf WHERE no_control = %s", (record_id,))
         file_paths = cursor.fetchall()
-
         if file_paths:
             for file_path in file_paths:
                 file_path = file_path[0]
-                print(f"Attempting to delete file: {file_path}")  # Debug message
-                
+                print(f"Attempting to delete file: {file_path}")
                 if os.path.exists(file_path):
                     os.remove(file_path)
-                    print(f"File deleted: {file_path}")  # Debug message
-
-                    # Verificar si la carpeta está vacía y eliminarla
+                    print(f"File deleted: {file_path}")
                     folder_path = os.path.dirname(file_path)
                     while os.path.isdir(folder_path) and not os.listdir(folder_path):
                         os.rmdir(folder_path)
                         folder_path = os.path.dirname(folder_path)
                 else:
-                    print(f"File not found: {file_path}")  # Debug message
-
-            # Eliminar rutas de archivos de la base de datos
+                    print(f"File not found: {file_path}")
             cursor.execute("DELETE FROM Rutas_pdf WHERE no_control = %s", (record_id,))
             conn.commit()
-
-        # Eliminar el registro en jornadas_academicas
         cursor.execute("DELETE FROM jornadas_academicas WHERE NoControl = %s", (record_id,))
         conn.commit()
         flash('Registro eliminado con éxito', 'success')
-
     except mysql.connector.Error as err:
         flash(f"Error en la base de datos: {err}", 'error')
     finally:
         cursor.close()
         conn.close()
-
     return redirect(url_for('profesores_dashboard'))
-
 
 #Metodo para el boton de cerrar session
 @app.route('/logout')
