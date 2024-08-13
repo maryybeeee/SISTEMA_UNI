@@ -345,25 +345,30 @@ def delete_value(record_id):
 @app.route('/delete_record/<int:record_id>', methods=['POST'])
 def delete_record(record_id):
     try:
+        # Conectar a la base de datos
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
+        
+        # Obtener las rutas de los archivos asociados al registro
         cursor.execute("SELECT ruta_archivo FROM Rutas_pdf WHERE no_control = %s", (record_id,))
         file_paths = cursor.fetchall()
         if file_paths:
             for file_path in file_paths:
                 file_path = file_path[0]
-                print(f"Attempting to delete file: {file_path}")
+                flash(f"Intentando eliminar el archivo: {file_path}", 'info')
                 if os.path.exists(file_path):
                     os.remove(file_path)
-                    print(f"File deleted: {file_path}")
+                    flash(f"Archivo eliminado: {file_path}", 'success')
                     folder_path = os.path.dirname(file_path)
                     while os.path.isdir(folder_path) and not os.listdir(folder_path):
                         os.rmdir(folder_path)
                         folder_path = os.path.dirname(folder_path)
                 else:
-                    print(f"File not found: {file_path}")
+                    flash(f"Archivo no encontrado: {file_path}", 'error')
             cursor.execute("DELETE FROM Rutas_pdf WHERE no_control = %s", (record_id,))
             conn.commit()
+        cursor.execute("DELETE FROM alumnos WHERE NoControl = %s", (record_id,))
+        conn.commit()
         cursor.execute("DELETE FROM jornadas_academicas WHERE NoControl = %s", (record_id,))
         conn.commit()
         flash('Registro eliminado con éxito', 'success')
