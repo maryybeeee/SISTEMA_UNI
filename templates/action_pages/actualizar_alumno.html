@@ -39,11 +39,9 @@
                 {% endif %}
             {% endfor %}
             <button type="submit" name="save_changes">Guardar Cambios</button><br><br>
-            <div class="button"><a href="{{ url_for('profesores_dashboard') }}" class="btn">Regresar</a></div>
-        </form><br> 
-        <form action="{{ url_for('delete_record', record_id=record['NoControl']) }}" method="post" style="display:inline;">
-            <button type="submit" name="delete_record" onclick="return confirm('¿Estás seguro de que deseas eliminar este registro?')">Eliminar Alumno</button>
-        </form>             
+            <button type="submit" name="go_back">Regresar</button><br><br>
+            <button type="submit" name="remove_record" onclick="return confirm('¿Estás seguro de que deseas eliminar este registro?')">Eliminar Alumno</button>
+        </form>           
     </div>
     <script src="{{ url_for('static', filename='js/layout.js') }}"></script>
 </body>

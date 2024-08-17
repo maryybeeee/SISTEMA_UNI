@@ -102,20 +102,3 @@
     font-size: 18px;
     cursor: pointer;
 }
-
-.button .btn {
-    display: inline-block;
-    padding: 10px 20px;
-    background-color: #033a6a;
-    color: white;
-    text-align: center;
-    text-decoration: none;
-    border-radius: 5px; 
-    font-size: 17px;
-    cursor: pointer;
-    width: calc(100% - 40px);
-}
-
-.button .btn:hover {
-    background-color: #0056b3;
-}

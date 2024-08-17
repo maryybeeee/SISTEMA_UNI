@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file, send_from_directory, abort
-from config import db_config, secret_key, UPLOAD_FOLDER
+from config import db_config, secret_key, UPLOAD_FOLDER, ALLOWED_EXTENSIONS
 from werkzeug.utils import secure_filename
 from datetime import timedelta
 import bcrypt
@@ -7,19 +7,30 @@ import mysql.connector
 import logging
 import os
 
-ALLOWED_EXTENSIONS = {'pdf'}
-
 app = Flask(__name__)
 app.secret_key = secret_key
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+def get_unique_filename(filename):
+    """Genera un nombre único para el archivo si ya existe uno con el mismo nombre."""
+    base, extension = os.path.splitext(filename)
+    counter = 1
+    new_filename = filename
+    while os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], new_filename)):
+        new_filename = f"{base}_{counter}{extension}"
+        counter += 1
+    return new_filename
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.template_filter('basename')
 def basename_filter(path):
     return os.path.basename(path)
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Ruta que se mostrará al ingresar en la página
 @app.route('/')
@@ -273,110 +284,103 @@ def edit_record(record_id):
                     columns_to_clear = request.form.getlist('columns_to_clear')
                     for column_name in columns_to_clear:
                         cursor.execute(f"UPDATE jornadas_academicas SET `{column_name}` = NULL WHERE NoControl = %s", (record_id,))
-                        cursor.execute("SELECT ruta_archivo FROM Rutas_pdf WHERE no_control = %s AND nombre_archivo = %s", (record_id, column_name))
-                        file_path = cursor.fetchone()
-                        if file_path:
+                        cursor.execute("SELECT ruta_archivo FROM rutas_pdf WHERE no_control = %s AND nombre_archivo = %s", (record_id, column_name))
+                        file_paths = cursor.fetchall()
+                        for file_path in file_paths:
                             file_path = file_path[0]
+                            flash(f"Intentando eliminar el archivo: {file_path}", 'info')
                             if os.path.exists(file_path):
                                 os.remove(file_path)
-                            folder_path = os.path.dirname(file_path)
-                            if os.path.exists(folder_path) and not os.listdir(folder_path):
-                                os.rmdir(folder_path)
-                            cursor.execute("DELETE FROM Rutas_pdf WHERE no_control = %s AND nombre_archivo = %s", (record_id, column_name))
+                                flash(f"Archivo eliminado: {file_path}", 'success')
+                            else:
+                                flash(f"Archivo no encontrado: {file_path}", 'error')
+                        cursor.execute("DELETE FROM rutas_pdf WHERE no_control = %s AND nombre_archivo = %s", (record_id, column_name))
+                    
                     conn.commit()
                     flash('Cambios guardados con éxito', 'success')
-                    return redirect(url_for('profesores_dashboard'))
                 except mysql.connector.Error as err:
                     flash(f"Error en la base de datos: {err}", 'error')
                 finally:
                     cursor.close()
                     conn.close()
-            elif 'delete_record' in request.form:
+                return redirect(url_for('profesores_dashboard'))
+            elif'delete_record'in request.form:
                 try:
                     conn = mysql.connector.connect(**db_config)
                     cursor = conn.cursor()
+                    cursor.execute("SELECT ruta_archivo FROM Rutas_pdf WHERE no_control = %s", (record_id,))
+                    file_paths = cursor.fetchall()
+                    for file_path in file_paths:
+                        file_path = file_path[0]
+                        if os.path.exists(file_path):
+                            os.remove(file_path)
+                            flash(f"Archivo eliminado: {file_path}", 'success')
+                    if file_paths:
+                        folder_path = os.path.dirname(file_paths[0][0])
+                        if os.path.isdir(folder_path) and not os.listdir(folder_path):
+                            os.rmdir(folder_path)
+                            flash(f"Carpeta eliminada: {folder_path}", 'success')
                     cursor.execute("DELETE FROM jornadas_academicas WHERE NoControl = %s", (record_id,))
+                    cursor.execute("DELETE FROM Rutas_pdf WHERE no_control = %s", (record_id,))
                     conn.commit()
-                    flash('Registro eliminado con éxito', 'success')
+                    flash('Registro y archivos eliminados con éxito', 'success')
                     return redirect(url_for('profesores_dashboard'))
                 except mysql.connector.Error as err:
                     flash(f"Error en la base de datos: {err}", 'error')
                 finally:
                     cursor.close()
                     conn.close()
-        try:
-            conn = mysql.connector.connect(**db_config)
-            cursor = conn.cursor(dictionary=True)
-            cursor.execute("SELECT * FROM jornadas_academicas WHERE NoControl = %s", (record_id,))
-            record = cursor.fetchone()
-            if record:
-                return render_template('action_pages/actualizar_alumno.html', record=record)
-            else:
-                flash('Registro no encontrado', 'error')
+            elif'go_back'in request.form:
                 return redirect(url_for('profesores_dashboard'))
-        except mysql.connector.Error as err:
-            flash(f"Error en la base de datos: {err}", 'error')
-            return redirect(url_for('profesores_dashboard'))
-        finally:
-            cursor.close()
-            conn.close()
-    return redirect(url_for('iniciar_profesores'))
-
-#Metodo para eliminar SOLO el valor de una celda
-@app.route('/delete_value/<int:record_id>', methods=['POST'])
-def delete_value(record_id):
-    column_name = request.form.get('column_name')
-    if 'user_id' in session and session.get('user_role') == 'profesor':
-        try:
-            conn = mysql.connector.connect(**db_config)
-            cursor = conn.cursor()
-            cursor.execute(f"UPDATE jornadas_academicas SET `{column_name}` = NULL WHERE NoControl = %s", (record_id,))
-            conn.commit()
-            flash('Valor eliminado con éxito', 'success')
-        except mysql.connector.Error as err:
-            flash(f"Error en la base de datos: {err}", 'error')
-        finally:
-            cursor.close()
-            conn.close()
-        return redirect(url_for('edit_record', record_id=record_id))
-    return redirect(url_for('iniciar_profesores'))
-
-#Metodo para borrar a un alumno
-@app.route('/delete_record/<int:record_id>', methods=['POST'])
-def delete_record(record_id):
-    try:
-        # Conectar a la base de datos
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor()
-        
-        # Obtener las rutas de los archivos asociados al registro
-        cursor.execute("SELECT ruta_archivo FROM Rutas_pdf WHERE no_control = %s", (record_id,))
-        file_paths = cursor.fetchall()
-        if file_paths:
-            for file_path in file_paths:
-                file_path = file_path[0]
-                flash(f"Intentando eliminar el archivo: {file_path}", 'info')
-                if os.path.exists(file_path):
-                    os.remove(file_path)
-                    flash(f"Archivo eliminado: {file_path}", 'success')
-                    folder_path = os.path.dirname(file_path)
-                    while os.path.isdir(folder_path) and not os.listdir(folder_path):
-                        os.rmdir(folder_path)
-                        folder_path = os.path.dirname(folder_path)
+            elif'remove_record'in request.form:
+                try:
+                    conn = mysql.connector.connect(**db_config)
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT ruta_archivo FROM Rutas_pdf WHERE no_control = %s", (record_id,))
+                    file_paths = cursor.fetchall()
+                    if file_paths:
+                        for file_path in file_paths:
+                            file_path = file_path[0]
+                            flash(f"Intentando eliminar el archivo: {file_path}", 'info')
+                            if os.path.exists(file_path):
+                                os.remove(file_path)
+                                flash(f"Archivo eliminado: {file_path}", 'success')
+                                folder_path = os.path.dirname(file_path)
+                                while os.path.isdir(folder_path) and not os.listdir(folder_path):
+                                    os.rmdir(folder_path)
+                                    folder_path = os.path.dirname(folder_path)
+                            else:
+                                flash(f"Archivo no encontrado: {file_path}", 'error')
+                        cursor.execute("DELETE FROM Rutas_pdf WHERE no_control = %s", (record_id,))
+                        conn.commit()
+                    cursor.execute("DELETE FROM alumnos WHERE NoControl = %s", (record_id,))
+                    conn.commit()
+                    cursor.execute("DELETE FROM jornadas_academicas WHERE NoControl = %s", (record_id,))
+                    conn.commit()
+                    flash('Registro eliminado con éxito', 'success')
+                except mysql.connector.Error as err:
+                    flash(f"Error en la base de datos: {err}", 'error')
+                finally:
+                    cursor.close()
+                    conn.close()
+                return redirect(url_for('profesores_dashboard'))
+        else:
+            try:
+                conn = mysql.connector.connect(**db_config)
+                cursor = conn.cursor(dictionary=True)
+                cursor.execute("SELECT * FROM jornadas_academicas WHERE NoControl = %s", (record_id,))
+                record = cursor.fetchone()
+                if record:
+                    return render_template('action_pages/actualizar_alumno.html', record=record)
                 else:
-                    flash(f"Archivo no encontrado: {file_path}", 'error')
-            cursor.execute("DELETE FROM Rutas_pdf WHERE no_control = %s", (record_id,))
-            conn.commit()
-        cursor.execute("DELETE FROM alumnos WHERE NoControl = %s", (record_id,))
-        conn.commit()
-        cursor.execute("DELETE FROM jornadas_academicas WHERE NoControl = %s", (record_id,))
-        conn.commit()
-        flash('Registro eliminado con éxito', 'success')
-    except mysql.connector.Error as err:
-        flash(f"Error en la base de datos: {err}", 'error')
-    finally:
-        cursor.close()
-        conn.close()
+                    flash('Registro no encontrado', 'error')
+                    return redirect(url_for('profesores_dashboard'))
+            except mysql.connector.Error as err:
+                flash(f"Error en la base de datos: {err}", 'error')
+                return redirect(url_for('profesores_dashboard'))
+            finally:
+                cursor.close()
+                conn.close()
     return redirect(url_for('profesores_dashboard'))
 
 #Metodo para el boton de cerrar session
