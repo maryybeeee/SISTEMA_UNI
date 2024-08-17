@@ -6,7 +6,19 @@
 </head>
 <body>
     <h1>Bienvenid@ {{ session['user_name'] }}</h1>
-    <form action="" method="POST" enctype="multipart/form-data">
+    
+    <form method="POST" enctype="multipart/form-data">
+        <div class="container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <ul class="flashes">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+        </div>
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
@@ -23,7 +35,7 @@
                         {% if col in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres'] %}
                             {{ item[col] }}
                         {% else %}
-                            <input type="file" name="file" class="file-input" id="file-input-{{ loop.index }}-{{ col }}" />
+                            <input type="file" name="file" accept=".pdf" class="file-input" id="file-input-{{ loop.index }}-{{ col }}" />
                             <input type="hidden" name="column_name" value="{{ col }}">
                             <label for="file-input-{{ loop.index }}-{{ col }}" class="file-label">Subir archivo</label>
                             <span class="file-name" id="file-name-{{ loop.index }}-{{ col }}">No se ha seleccionado archivo</span>
@@ -38,17 +50,6 @@
             <button type="submit">Guardar</button>
         </div>
     </form>
-    <div class="container">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <ul class="flashes">
-                {% for category, message in messages %}
-                    <li class="{{ category }}">{{ message }}</li>
-                {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %}
-    </div>
     <script>
         document.querySelectorAll('.file-input').forEach(input => {
             input.addEventListener('change', function() {

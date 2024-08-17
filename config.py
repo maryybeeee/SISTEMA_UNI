@@ -6,7 +6,6 @@ db_config = {
     'password': 'MiguelWorkbench009',
     'host': 'localhost',
     'database': 'bd',
-    'connect_timeout': 10,
     'port': 3306
 }
 
