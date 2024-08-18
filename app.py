@@ -336,16 +336,31 @@ def profesores_dashboard():
                         cursor = conn.cursor()
                         print("Conexión a la base de datos establecida")
                         # Obtiene los archivos asociados con la columna a eliminar
-                        cursor.execute(f"SELECT `{column_name}` FROM jornadas_academicas")
+                        cursor.execute(f"SELECT NoControl, `{column_name}` FROM jornadas_academicas")
                         file_paths = cursor.fetchall()
                         print(f"Rutas de archivos encontrados: {file_paths}")
-                        # Elimina los archivos de la carpeta correspondiente
-                        for (file_path,) in file_paths:
-                            if file_path:
-                                full_path = os.path.join('static/uploads/', file_path)
-                                if os.path.exists(full_path):
-                                    os.remove(full_path)
-                                    print(f"Archivo eliminado: {full_path}")
+                        # Recorre los resultados de la consulta para eliminar los archivos
+                        for no_control, file_name in file_paths:
+                            if file_name: # Verifica que file_name no sea None o una cadena vacía
+                                # Construye la ruta completa usando el número de control
+                                file_path = os.path.join('static', 'uploads', str(no_control), file_name)
+                                file_path = os.path.abspath(file_path) # Convierte a una ruta absoluta
+                                print(f"Verificando la existencia del archivo: {file_path}")
+                                if os.path.exists(file_path):
+                                    print(f"Eliminando archivo: {file_path}")
+                                    os.remove(file_path)
+                                else:
+                                    print(f"Archivo no encontrado: {file_path}")
+                            else:
+                                print(f"Archivo no válido en la base de datos: NoControl {no_control}, Archivo {file_name}")
+                        # Eliminar registros de rutas_pdf, jornadas_academicas y alumnos
+                        cursor.execute("DELETE FROM rutas_pdf WHERE tabla_referencia = %s", (column_name,))
+                        print(f"Registros eliminados en rutas_pdf para {column_name}")
+                        # Reordenar los IDs en rutas_pdf para que sean consecutivos
+                        cursor.execute("SET @count = 0;")
+                        cursor.execute("UPDATE rutas_pdf SET id = @count:= @count + 1;")
+                        cursor.execute("ALTER TABLE rutas_pdf AUTO_INCREMENT = 1;")
+                        print("IDs en rutas_pdf reordenados")
                         # Elimina la columna de la tabla
                         cursor.execute(f"ALTER TABLE jornadas_academicas DROP COLUMN `{column_name}`")
                         conn.commit()
@@ -353,7 +368,7 @@ def profesores_dashboard():
                         print(f"Columna {column_name} eliminada con éxito")
                     except mysql.connector.Error as err:
                         print(f"Error en la base de datos: {err}")
-                        flash(f"Error en la base de datos: {err}", 'error')
+                        flash(f"Error en la base de datos: {err}", 'error')                        
                     except Exception as e:
                         flash(f"Error al eliminar archivos: {e}", 'error')
                         print(f"Error al eliminar archivos: {e}")
@@ -381,7 +396,6 @@ def profesores_dashboard():
             # Prepara los datos de los alumnos para la plantilla
             column_names = ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres'] + columns + ['Estado', 'Atendidos']
             alumnos_dict = [dict(zip(column_names, row)) for row in alumnos]
-            print(f"Datos de alumnos obtenidos: {alumnos_dict}")
             # Obtiene los archivos asociados a los alumnos
             cursor.execute("SELECT * FROM rutas_pdf")
             archivos = cursor.fetchall()
@@ -395,7 +409,6 @@ def profesores_dashboard():
                     archivos_dict[no_control] = []
                 # Agrega la informacion del archivo (nombre y ruta) a la lista del numero de control correspondiente
                 archivos_dict[no_control].append({'nombre': archivo[1], 'ruta': os.path.basename(archivo[2])})
-            print(f"Datos de archivos obtenidos: {archivos_dict}")
             # Calcula el conteo de valores no vacíos para cada alumno
             for row in alumnos_dict:
                 count_non_empty = sum(1 for key in row if key not in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres', 'Conteo', 'Estado', 'Atendidos'] and row[key] not in [None, ''])
