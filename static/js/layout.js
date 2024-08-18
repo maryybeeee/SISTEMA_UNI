@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", function() {
         flashes.forEach(function(flash) {
             flash.style.display = 'none';
         });
-    }, 3000);
+    }, 5000);
 });
 
 function togglePasswordVisibility(passwordFieldId, iconElement) {

@@ -35,9 +35,19 @@
                         {% if col in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres'] %}
                             {{ item[col] }}
                         {% else %}
+                            {% if item[col] %}
+                                <a href="{{ url_for('static', filename='uploads/' ~ session['user_id'] ~ '/' ~ item[col]) }}" target="_blank">Ver archivo</a>
+                                <br>
+                            {% endif %}
                             <input type="file" name="file" accept=".pdf" class="file-input" id="file-input-{{ loop.index }}-{{ col }}" />
                             <input type="hidden" name="column_name" value="{{ col }}">
-                            <label for="file-input-{{ loop.index }}-{{ col }}" class="file-label">Subir archivo</label>
+                            <label for="file-input-{{ loop.index }}-{{ col }}" class="file-label">
+                                {% if item[col] %}
+                                    Reemplazar archivo
+                                {% else %}
+                                    Subir archivo
+                                {% endif %}
+                            </label>
                             <span class="file-name" id="file-name-{{ loop.index }}-{{ col }}">No se ha seleccionado archivo</span>
                         {% endif %}
                     </td>

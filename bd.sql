@@ -30,6 +30,7 @@ CREATE TABLE rutas_pdf (
   no_control INT NOT NULL,
   nombre_archivo VARCHAR(255) NOT NULL,
   ruta_archivo VARCHAR(255) NOT NULL,
+  tabla_referencia VARCHAR(255) NOT NULL,
   FOREIGN KEY (no_control) REFERENCES jornadas_academicas(NoControl) ON DELETE CASCADE
 );
 

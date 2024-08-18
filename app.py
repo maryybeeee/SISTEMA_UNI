@@ -102,19 +102,49 @@ def alumnos_dashboard():
                         os.makedirs(upload_folder)
                     filename = secure_filename(file.filename)
                     save_path = os.path.join(upload_folder, filename)
-                    file.save(save_path)
                     try:
                         conn = mysql.connector.connect(**db_config)
                         cursor = conn.cursor()
+
+                        # Verificar si ya existe un archivo en esa columna
+                        cursor.execute("SELECT id, ruta_archivo FROM rutas_pdf WHERE no_control = %s AND tabla_referencia = %s", (control_number, column_name))
+                        existing_file = cursor.fetchone()
+
+                        if existing_file:
+                            existing_id, existing_path = existing_file
+                            flash(f"El archivo ({filename}) asociado con la columna '{column_name}' ya existe. Se reemplazará el archivo anterior.", 'info')
+                            # Eliminar el archivo físico existente
+                            if os.path.exists(existing_path):
+                                os.remove(existing_path)
+                            # Eliminar el registro existente en la base de datos
+                            cursor.execute("DELETE FROM rutas_pdf WHERE id = %s", (existing_id,))
+
+                        # Guardar el nuevo archivo
+                        file.save(save_path)
+
+                        # Insertar o actualizar la ruta del archivo en la base de datos
+                        cursor.execute("INSERT INTO rutas_pdf (no_control, nombre_archivo, ruta_archivo, tabla_referencia) VALUES (%s, %s, %s, %s)", (control_number, filename, save_path, column_name))
+
+                        # Actualizar la tabla jornadas_academicas
                         cursor.execute(f"UPDATE jornadas_academicas SET `{column_name}` = %s WHERE NoControl = %s", (filename, control_number))
-                        cursor.execute("INSERT INTO Rutas_pdf (no_control, nombre_archivo, ruta_archivo) VALUES (%s, %s, %s)", (control_number, filename, save_path))
+                        
+                        # Reordenar los IDs en rutas_pdf para que sean consecutivos
+                        cursor.execute("SET @count = 0;")
+                        cursor.execute("UPDATE rutas_pdf SET id = @count:= @count + 1;")
+                        cursor.execute("ALTER TABLE rutas_pdf AUTO_INCREMENT = 1;")
+                        print("IDs en rutas_pdf reordenados")
+
                         conn.commit()
+                        if existing_file:
+                            flash(f"Archivo '{filename}' reemplazado con éxito.", 'success')
+                        else:
+                            flash(f"Archivo '{filename}' subido y guardado con éxito", 'success')
+
                     except mysql.connector.Error as err:
                         flash(f"Error en la base de datos: {err}", 'error')
                     finally:
                         cursor.close()
                         conn.close()
-            flash('Archivos subidos y guardados con éxito', 'success')
         try:
             conn = mysql.connector.connect(**db_config)
             cursor = conn.cursor()
@@ -228,11 +258,20 @@ def profesores_dashboard():
                     try:
                         conn = mysql.connector.connect(**db_config)
                         cursor = conn.cursor()
+                        cursor.execute(f"SELECT `{column_name}` FROM jornadas_academicas")
+                        file_paths = cursor.fetchall()
+                        for (file_path,) in file_paths:
+                            if file_path:
+                                full_path = os.path.join('static/uploads/', file_path)
+                                if os.path.exists(full_path):
+                                    os.remove(full_path)
                         cursor.execute(f"ALTER TABLE jornadas_academicas DROP COLUMN `{column_name}`")
                         conn.commit()
                         flash('Columna eliminada con éxito', 'success')
                     except mysql.connector.Error as err:
                         flash(f"Error en la base de datos: {err}", 'error')
+                    except Exception as e:
+                        flash(f"Error al eliminar archivos: {e}", 'error')
                     finally:
                         cursor.close()
                         conn.close()
@@ -249,7 +288,7 @@ def profesores_dashboard():
             alumnos = cursor.fetchall()
             column_names = ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres'] + columns + ['Estado', 'Atendidos']
             alumnos_dict = [dict(zip(column_names, row)) for row in alumnos]
-            cursor.execute("SELECT no_control, nombre_archivo, ruta_archivo FROM Rutas_pdf")
+            cursor.execute("SELECT no_control, nombre_archivo, ruta_archivo FROM rutas_pdf")
             archivos = cursor.fetchall()
             archivos_dict = {}
             for archivo in archivos:
@@ -275,120 +314,136 @@ def edit_record(record_id):
     if 'user_id' in session and session.get('user_role') == 'profesor':
         if request.method == 'POST':
             if 'save_changes' in request.form:
+                print(f"Iniciando el guardado de cambios para el registro {record_id}")
                 try:
                     conn = mysql.connector.connect(**db_config)
                     cursor = conn.cursor()
+                    print("Conexión a la base de datos establecida")
+                    # Actualizar columnas
                     for column, value in request.form.items():
                         if column not in ['NoControl', 'save_changes', 'columns_to_clear']:
+                            print(f"Actualizando columna {column} con valor {value}")
                             cursor.execute(f"UPDATE jornadas_academicas SET `{column}` = %s WHERE NoControl = %s", (value, record_id))
+                    # Limpiar columnas
                     columns_to_clear = request.form.getlist('columns_to_clear')
+                    print(f"Columnas a limpiar: {columns_to_clear}")
                     for column_name in columns_to_clear:
                         cursor.execute(f"UPDATE jornadas_academicas SET `{column_name}` = NULL WHERE NoControl = %s", (record_id,))
-                        cursor.execute("SELECT ruta_archivo FROM rutas_pdf WHERE no_control = %s AND nombre_archivo = %s", (record_id, column_name))
+                        print(f"Columna {column_name} limpiada")
+                        # Buscar y eliminar archivos asociados
+                        cursor.execute("SELECT ruta_archivo FROM rutas_pdf WHERE no_control = %s AND tabla_referencia = %s", (record_id, column_name))
                         file_paths = cursor.fetchall()
+                        # Verificación adicional
+                        if not file_paths:
+                            print(f"No se encontraron rutas de archivos para no_control={record_id} y tabla_referencia={column_name}")
+                        else:
+                            print(f"Rutas de archivos encontradas para {column_name}: {file_paths}")
                         for file_path in file_paths:
                             file_path = file_path[0]
-                            flash(f"Intentando eliminar el archivo: {file_path}", 'info')
                             if os.path.exists(file_path):
+                                print(f"Eliminando archivo: {file_path}")
                                 os.remove(file_path)
-                                flash(f"Archivo eliminado: {file_path}", 'success')
                             else:
-                                flash(f"Archivo no encontrado: {file_path}", 'error')
-                        cursor.execute("DELETE FROM rutas_pdf WHERE no_control = %s AND nombre_archivo = %s", (record_id, column_name))
-                    
+                                print(f"Archivo no encontrado: {file_path}")
+                            # Solo eliminar el registro en la base de datos si el archivo existe o si quieres hacerlo de todos modos
+                            cursor.execute("DELETE FROM rutas_pdf WHERE no_control = %s AND tabla_referencia = %s", (record_id, column_name))
+                            print(f"Registro eliminado en rutas_pdf para {column_name}")
+                        # Reordenar los IDs en rutas_pdf para que sean consecutivos
+                        cursor.execute("SET @count = 0;")
+                        cursor.execute("UPDATE rutas_pdf SET id = @count:= @count + 1;")
+                        cursor.execute("ALTER TABLE rutas_pdf AUTO_INCREMENT = 1;")
+                        print("IDs en rutas_pdf reordenados")
+
                     conn.commit()
+                    print("Cambios guardados en la base de datos")
                     flash('Cambios guardados con éxito', 'success')
                 except mysql.connector.Error as err:
+                    print(f"Error en la base de datos: {err}")
                     flash(f"Error en la base de datos: {err}", 'error')
                 finally:
                     cursor.close()
                     conn.close()
+                    print("Conexión a la base de datos cerrada")
                 return redirect(url_for('profesores_dashboard'))
-            elif'delete_record'in request.form:
+
+            elif 'delete_record' in request.form:
+                print(f"Iniciando eliminación del registro {record_id}")
                 try:
                     conn = mysql.connector.connect(**db_config)
                     cursor = conn.cursor()
-                    cursor.execute("SELECT ruta_archivo FROM Rutas_pdf WHERE no_control = %s", (record_id,))
+                    print("Conexión a la base de datos establecida")
+
+                    # Eliminar archivos asociados
+                    cursor.execute("SELECT ruta_archivo FROM rutas_pdf WHERE no_control = %s", (record_id,))
                     file_paths = cursor.fetchall()
+                    print(f"Rutas de archivos encontradas: {file_paths}")
                     for file_path in file_paths:
                         file_path = file_path[0]
                         if os.path.exists(file_path):
+                            print(f"Eliminando archivo: {file_path}")
                             os.remove(file_path)
-                            flash(f"Archivo eliminado: {file_path}", 'success')
-                    if file_paths:
-                        folder_path = os.path.dirname(file_paths[0][0])
-                        if os.path.isdir(folder_path) and not os.listdir(folder_path):
-                            os.rmdir(folder_path)
-                            flash(f"Carpeta eliminada: {folder_path}", 'success')
+                        else:
+                            print(f"Archivo no encontrado: {file_path}")
+
+                    # Eliminar registro en rutas_pdf y jornadas_academicas
+                    cursor.execute("DELETE FROM rutas_pdf WHERE no_control = %s", (record_id,))
+                    print(f"Registros eliminados en rutas_pdf para {record_id}")
                     cursor.execute("DELETE FROM jornadas_academicas WHERE NoControl = %s", (record_id,))
-                    cursor.execute("DELETE FROM Rutas_pdf WHERE no_control = %s", (record_id,))
-                    conn.commit()
-                    flash('Registro y archivos eliminados con éxito', 'success')
-                    return redirect(url_for('profesores_dashboard'))
-                except mysql.connector.Error as err:
-                    flash(f"Error en la base de datos: {err}", 'error')
-                finally:
-                    cursor.close()
-                    conn.close()
-            elif'go_back'in request.form:
-                return redirect(url_for('profesores_dashboard'))
-            elif'remove_record'in request.form:
-                try:
-                    conn = mysql.connector.connect(**db_config)
-                    cursor = conn.cursor()
-                    cursor.execute("SELECT ruta_archivo FROM Rutas_pdf WHERE no_control = %s", (record_id,))
-                    file_paths = cursor.fetchall()
-                    if file_paths:
-                        for file_path in file_paths:
-                            file_path = file_path[0]
-                            flash(f"Intentando eliminar el archivo: {file_path}", 'info')
-                            if os.path.exists(file_path):
-                                os.remove(file_path)
-                                flash(f"Archivo eliminado: {file_path}", 'success')
-                                folder_path = os.path.dirname(file_path)
-                                while os.path.isdir(folder_path) and not os.listdir(folder_path):
-                                    os.rmdir(folder_path)
-                                    folder_path = os.path.dirname(folder_path)
-                            else:
-                                flash(f"Archivo no encontrado: {file_path}", 'error')
-                        cursor.execute("DELETE FROM Rutas_pdf WHERE no_control = %s", (record_id,))
-                        conn.commit()
+                    print(f"Registros eliminados en jornadas_academicas para {record_id}")
                     cursor.execute("DELETE FROM alumnos WHERE NoControl = %s", (record_id,))
+                    print(f"Registros eliminados en alumnos para {record_id}")
                     conn.commit()
-                    cursor.execute("DELETE FROM jornadas_academicas WHERE NoControl = %s", (record_id,))
-                    conn.commit()
-                    flash('Registro eliminado con éxito', 'success')
+
+                    # Reordenar los IDs en rutas_pdf para que sean consecutivos
+                    cursor.execute("SET @count = 0;")
+                    cursor.execute("UPDATE rutas_pdf SET id = @count:= @count + 1;")
+                    cursor.execute("ALTER TABLE rutas_pdf AUTO_INCREMENT = 1;")
+                    print("IDs en rutas_pdf reordenados")
+
+                    flash('Registro y archivos eliminados con éxito', 'success')
                 except mysql.connector.Error as err:
+                    print(f"Error en la base de datos: {err}")
                     flash(f"Error en la base de datos: {err}", 'error')
                 finally:
                     cursor.close()
                     conn.close()
+                    print("Conexión a la base de datos cerrada")
                 return redirect(url_for('profesores_dashboard'))
+
+            elif 'go_back' in request.form:
+                print("Regresando al dashboard de profesores")
+                return redirect(url_for('profesores_dashboard'))
+
         else:
+            print(f"Cargando datos para el registro {record_id}")
             try:
                 conn = mysql.connector.connect(**db_config)
                 cursor = conn.cursor(dictionary=True)
+                print("Conexión a la base de datos establecida")
                 cursor.execute("SELECT * FROM jornadas_academicas WHERE NoControl = %s", (record_id,))
                 record = cursor.fetchone()
                 if record:
+                    print(f"Registro encontrado: {record}")
                     return render_template('action_pages/actualizar_alumno.html', record=record)
                 else:
+                    print(f"Registro {record_id} no encontrado")
                     flash('Registro no encontrado', 'error')
                     return redirect(url_for('profesores_dashboard'))
             except mysql.connector.Error as err:
+                print(f"Error en la base de datos: {err}")
                 flash(f"Error en la base de datos: {err}", 'error')
                 return redirect(url_for('profesores_dashboard'))
             finally:
                 cursor.close()
                 conn.close()
+                print("Conexión a la base de datos cerrada")
+    print("Redirigiendo al dashboard de profesores")
     return redirect(url_for('profesores_dashboard'))
 
 #Metodo para el boton de cerrar session
 @app.route('/logout')
 def logout():
-    session.pop('user_id', None)
-    session.pop('user_role', None)
-    session.pop('user_name', None)
+    session.clear()
     flash('Has cerrado sesión correctamente.', 'info')
     return redirect(url_for('index'))
 
