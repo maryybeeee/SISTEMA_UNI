@@ -1,7 +1,60 @@
-.title {
-    color: #333;
-    font-size: 2em;
+.intro {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.intro p, .intro ul {
+    margin: 10px 0;
+}
+
+.intro ul {
+    list-style-type: disc;
+    padding-left: 20px;
+}
+
+.sections {
+    margin-top: 30px;
+}
+
+.sections h3 {
+    color: #033a6a;
+    font-size: 1.5em;
     margin-bottom: 10px;
+}
+
+.sections p {
+    color: #555;
+    margin-bottom: 15px;
+}
+
+.sections button {
+    background-color: #033a6a;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+.sections button:hover {
+    background-color: #0056b3;
+}
+
+.main-container {
+    background-color: #d8d8d8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    padding: 20px;
+    width: 100%;
+    max-width: 800px;
+    margin: auto;
+    margin-bottom: 10px;
+    border-radius: 15px;
 }
 
 .intro {
@@ -10,36 +63,41 @@
     margin-bottom: 20px;
 }
 
-.section-title {
-    color: #333;
+.intro p, .intro ul {
+    margin: 10px 0;
+}
+
+.intro ul {
+    list-style-type: disc;
+    padding-left: 20px;
+}
+
+.sections {
+    margin-top: 30px;
+}
+
+.sections h3 {
+    color: #033a6a;
     font-size: 1.5em;
-    margin-top: 20px;
     margin-bottom: 10px;
 }
 
-.subsection-title {
+.sections p {
     color: #555;
-    font-size: 1.2em;
-    margin-top: 15px;
-    margin-bottom: 5px;
+    margin-bottom: 15px;
 }
 
-
-
-.benefits-list {
-    list-style-type: disc;
-    margin-left: 20px;
+.sections button {
+    background-color: #033a6a;
+    color: #fff;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
     margin-bottom: 20px;
 }
 
-.benefit-item {
-    color: #666;
-    line-height: 1.6;
-}
-
-@media (max-width: 768px) {
-    .container {
-        width: 95%;
-        padding: 10px;
-    }
+.sections button:hover {
+    background-color: #0056b3;
 }

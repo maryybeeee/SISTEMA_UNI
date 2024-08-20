@@ -6,60 +6,71 @@
 </head>
 <body>
     <h1>Bienvenid@ {{ session['user_name'] }}</h1>
-    
-    <form method="POST" enctype="multipart/form-data">
-        <div class="container">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <ul class="flashes">
-                    {% for category, message in messages %}
-                        <li class="{{ category }}">{{ message }}</li>
-                    {% endfor %}
-                    </ul>
-                {% endif %}
-            {% endwith %}
-        </div>
-        <table class="table table-bordered table-striped">
-            <thead>
-                <tr>
-                    {% for col in columns %}
-                    <th>{{ col }}</th>
-                    {% endfor %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in alumnos %}
-                <tr>
-                    {% for col in columns %}
-                    <td>
-                        {% if col in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres'] %}
-                            {{ item[col] }}
-                        {% else %}
-                            {% if item[col] %}
-                                <a href="{{ url_for('static', filename='uploads/' ~ session['user_id'] ~ '/' ~ item[col]) }}" target="_blank">Ver archivo</a>
-                                <br>
-                            {% endif %}
-                            <input type="file" name="file" accept=".pdf" class="file-input" id="file-input-{{ loop.index }}-{{ col }}" />
-                            <input type="hidden" name="column_name" value="{{ col }}">
-                            <label for="file-input-{{ loop.index }}-{{ col }}" class="file-label">
-                                {% if item[col] %}
-                                    Reemplazar archivo
-                                {% else %}
-                                    Subir archivo
-                                {% endif %}
-                            </label>
-                            <span class="file-name" id="file-name-{{ loop.index }}-{{ col }}">No se ha seleccionado archivo</span>
-                        {% endif %}
-                    </td>
-                    {% endfor %}
-                </tr>
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
                 {% endfor %}
-            </tbody>
-        </table>
-        <div style="margin-top: 20px;">
-            <button type="submit">Guardar</button>
-        </div>
-    </form>
+                </ul>
+            {% endif %}
+        {% endwith %}
+    </div>
+    <div class="centrar">
+        <form method="POST" enctype="multipart/form-data">
+            <div class="table-container">
+                <div class="scroll-container">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th class="no-control">No Control</th>
+                                <th class="nombre">Nombre</th>
+                                {% for col in columns %}
+                                    {% if col not in ['NoControl', 'Nombre'] %}
+                                        <th>{{ col }}</th>
+                                    {% endif %}
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in alumnos %}
+                            <tr class="detail-row">
+                                {% for col in columns %}
+                                <td data-label="{{ col }}">
+                                    {% if col in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres'] %}
+                                        {{ item[col] }}
+                                    {% else %}
+                                        {% if item[col] %}
+                                            <a href="{{ url_for('static', filename='uploads/' ~ session['user_id'] ~ '/' ~ item[col]) }}" target="_blank" class="view-pdf-button">Ver PDF</a>
+                                            <br>
+                                        {% endif %}
+                                        <input type="file" name="file" accept=".pdf" class="file-input" id="file-input-{{ loop.index }}-{{ col }}" />
+                                        <input type="hidden" name="column_name" value="{{ col }}">
+                                        <label for="file-input-{{ loop.index }}-{{ col }}" class="file-label">
+                                            {% if item[col] %}
+                                                Reemplazar PDF
+                                            {% else %}
+                                                Subir PDF
+                                            {% endif %}
+                                        </label>
+                                        <span class="file-name" id="file-name-{{ loop.index }}-{{ col }}">No se ha seleccionado archivo</span>
+                                    {% endif %}
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div>
+                <button type="submit" class="submit-button">Guardar</button>
+            </div>
+        </form>
+
+    </div>
+    
     <script>
         document.querySelectorAll('.file-input').forEach(input => {
             input.addEventListener('change', function() {

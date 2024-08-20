@@ -79,6 +79,25 @@
     background-color: #0056b3;
 }
 
+.view_pdf_button {
+    display: block;
+    max-width: 35%;
+    padding: 8px 12px;
+    margin: 5px 0;
+    border: 1px solid #28a745;
+    border-radius: 4px;
+    background-color: #28a745;
+    color: white;
+    text-decoration: none;
+    font-size: 14px;
+    text-align: center;
+}
+
+.view_pdf_button:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
 .checkbox-wrapper {
     display: flex;
     font-size: 18px;

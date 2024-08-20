@@ -290,3 +290,17 @@ footer {
     overflow-x: auto;
     white-space: nowrap;
 }
+.button{
+    background-color: #033a6a;
+    padding: 7px;
+    border-radius: 5px;
+    text-decoration: none;
+    color: #ffffff;
+    font-size: 17px;
+    width: auto;
+
+}
+
+.button:hover{
+    background-color: #0056b3;
+}
