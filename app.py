@@ -115,12 +115,20 @@ def alumnos_dashboard():
     if 'user_id' in session and session.get('user_role') == 'alumno':
         control_number = session['user_id']
         if request.method == 'POST':
-            files = request.files.getlist('file') # Obtiene la lista de archivos subidos en el formulario
-            column_names = request.form.getlist('column_name') # Obtiene la lista de nombres de columnas asociadas a los archivos
             # Recorre cada archivo y su nombre de columna asociado
+            files = request.files.getlist('file')  # Obtiene la lista de archivos subidos en el formulario
+            column_names = request.form.getlist('column_name')  # Obtiene la lista de nombres de columnas asociadas a los archivos
+            # Define el tamaño máximo permitido en bytes (100 KB)
+            max_file_size = 100 * 1024  # 100 KB en bytes
             for file, column_name in zip(files, column_names):
                 if file and column_name:
-                    # Construye la ruta de la carpeta de subidas para el usuario basado en el numero de control
+                    # Verifica el tamaño del archivo
+                    if len(file.read()) > max_file_size:
+                        flash(f"El archivo '{file.filename}' supera los 100 KB. Por favor, sube un archivo más pequeño.", 'error')
+                        return redirect(url_for('alumnos_dashboard'))
+                    # Regresar el cursor al inicio después de leer el archivo para verificar el tamaño
+                    file.seek(0)
+                    # Resto del código para guardar el archivo
                     upload_folder = os.path.join(app.config['UPLOAD_FOLDER'], str(control_number))
                     # Si la carpeta no existe, la crea
                     if not os.path.exists(upload_folder):
@@ -368,7 +376,7 @@ def profesores_dashboard():
                         print(f"Columna {column_name} eliminada con éxito")
                     except mysql.connector.Error as err:
                         print(f"Error en la base de datos: {err}")
-                        flash(f"Error en la base de datos: {err}", 'error')                        
+                        flash(f"Error en la base de datos: {err}", 'error')
                     except Exception as e:
                         flash(f"Error al eliminar archivos: {e}", 'error')
                         print(f"Error al eliminar archivos: {e}")
@@ -377,6 +385,55 @@ def profesores_dashboard():
                         cursor.close()
                         conn.close()
                         print("Conexión a la base de datos cerrada")
+            elif 'search_student' in request.form:
+                number_control = request.form['number_control']
+                try:
+                    # Conecta a la base de datos
+                    conn = mysql.connector.connect(**db_config)
+                    cursor = conn.cursor()
+                    print("Conexión a la base de datos establecida")
+                    # Obtiene las columnas actuales de la tabla
+                    cursor.execute("SHOW COLUMNS FROM jornadas_academicas")
+                    columns = [row[0] for row in cursor.fetchall() if row[0] not in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres', 'Estado', 'Atendidos']]
+                    print(f"Columnas existentes: {columns}")
+                    # Ajusta la lista de columnas para incluir 'Conteo' en la posición correcta
+                    if 'Conteo' in columns:
+                        conteo_column = columns.index('Conteo')
+                        columns = columns[:conteo_column]
+                        columns.append('Conteo')
+                    cursor.execute("SELECT * FROM jornadas_academicas WHERE NoControl = %s", (number_control,))
+                    alumnos = cursor.fetchall()
+                    # Prepara los datos de los alumnos para la plantilla
+                    column_names = ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres'] + columns + ['Estado', 'Atendidos']
+                    alumnos_dict = [dict(zip(column_names, row)) for row in alumnos]
+                    # Obtiene los archivos asociados a los alumnos
+                    cursor.execute("SELECT * FROM rutas_pdf WHERE no_control = %s", (number_control,))
+                    archivos = cursor.fetchall()
+                    # Crea un diccionario para almacenar los archivos por numero de control
+                    archivos_dict = {}
+                    # Recorre los resultados de la consulta
+                    for archivo in archivos:
+                        no_control = archivo[0] # Obtiene el número de control del alumno
+                        if no_control not in archivos_dict:
+                            # Si el numero de control no esta en el diccionario, inicializa una lista vacía
+                            archivos_dict[no_control] = []
+                        # Agrega la informacion del archivo (nombre y ruta) a la lista del numero de control correspondiente
+                        archivos_dict[no_control].append({'nombre': archivo[1], 'ruta': os.path.basename(archivo[2])})
+                    # Calcula el conteo de valores no vacíos para cada alumno
+                    for row in alumnos_dict:
+                        count_non_empty = sum(1 for key in row if key not in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres', 'Conteo', 'Estado', 'Atendidos'] and row[key] not in [None, ''])
+                        row['Conteo'] = count_non_empty
+                    return render_template('profesores_dashboard.html', alumnos=alumnos_dict, columns=column_names)
+                except mysql.connector.Error as err:
+                    print(f"Error en la base de datos: {err}")
+                    flash(f"Error en la base de datos: {err}", 'error')
+                finally:
+                    # Cierra la conexion a la base de datos
+                    cursor.close()
+                    conn.close()
+                    print("Conexión a la base de datos cerrada")
+            elif 'search_cancel' in request.form:
+                return redirect(url_for('profesores_dashboard'))
         try:
             # Conecta a la base de datos
             conn = mysql.connector.connect(**db_config)
