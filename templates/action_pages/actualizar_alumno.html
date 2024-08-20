@@ -2,7 +2,7 @@
 {% block title %}Actualizar Alumno{% endblock %}
 {% block content %}
 <head>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/actualizar_alumno.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/profesores_dashboard.css') }}">
 </head>
 <body>
     <h2>Actualizar valor del Alumno</h2>
@@ -25,17 +25,23 @@
                         <option value="1" {{ value == 1 and 'selected' }}>Atendido</option>
                     </select>
                     {% else %}
-                    <!-- Botón para eliminar el valor de esta celda -->
-                    <input type="checkbox" name="columns_to_clear" value="{{ column }}" {% if not value %}disabled{% endif %}> Eliminar valor de esta celda
+                    <div class="checkbox-wrapper">
+                        {% if value %}
+                            <a href="{{ url_for('uploaded_file', user_id=record['NoControl'], filename=record[column]|basename) }}" target="_blank" class="view_pdf_button">Ver archivo PDF</a>
+                        {% endif %}
+                        <div class="direcction">
+                            <input type="checkbox" id="large_checkbox_{{ column }}" name="columns_to_clear" value="{{ column }}" {% if not value %}disabled{% endif %}>
+                            <label for="large_checkbox_{{ column }}">Eliminar valor de esta celda</label>
+                        </div>
+                    </div>
                     {% endif %}
                 </div>
                 {% endif %}
             {% endfor %}
             <button type="submit" name="save_changes">Guardar Cambios</button><br><br>
-            <form action="{{ url_for('delete_record', record_id=record['NoControl']) }}" method="post" style="display:inline;">
-                <button type="submit" name="delete_record" onclick="return confirm('¿Estás seguro de que deseas eliminar este registro?')">Eliminar Alumno</button>
-            </form>
-        </form>                
+            <button type="submit" name="go_back">Regresar</button><br><br>
+            <button type="submit" name="remove_record" onclick="return confirm('¿Estás seguro de que deseas eliminar este registro?')">Eliminar Alumno</button>
+        </form>           
     </div>
     <script src="{{ url_for('static', filename='js/layout.js') }}"></script>
 </body>

@@ -23,11 +23,15 @@ body {
     background-color: #ffffff;
     color: #333333;
     padding: 10px 40px;
+    overflow: hidden;
 }
 
 .logo-container img {
-    max-height: 120px;
-    margin: 0 10px; 
+    max-height: 100px;
+    max-width: 50%;
+    width: auto;
+    margin: 0 10px;
+    flex-shrink: 1;
 }
 
 header {
@@ -143,25 +147,37 @@ header {
 }
 
 .container {
-    max-width: 600px;
-    margin: 50px auto;
-    background-color: #ffffff;
+    background-color: #d8d8d8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
     padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px #0000001a;
+    width: 100%;
+    max-width: 600px;
+    margin: auto;
+    margin-bottom: 10px;
+    border-radius: 15px;
+    box-sizing: border-box;
 }
 
-h2 {
+h1, h2 {
     text-align: center;
     margin-bottom: 20px;
 }
 
+form {
+    width: 100%;
+}
+
 .form-group {
+    display: flex;
+    flex-direction: column;
     margin-bottom: 20px;
 }
 
-label {
-    display: block;
+.form-group label {
+    margin-bottom: 5px;
     font-weight: bold;
 }
 
@@ -192,6 +208,37 @@ button {
 button:hover {
     background-color: #0056b3;
 }
+#loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgb(255, 255, 255);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.5s;
+    display: flex;
+    flex-direction: column;
+}
+#loading-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+.spinner {
+    border: 8px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 8px solid #3498db;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
 
 .form-group.password-container {
     position: relative;
@@ -208,10 +255,11 @@ button:hover {
 .form-group.password-container .toggle-password {
     position: absolute;
     top: 62%;
+    left: 96%;
     font-size: 1.5em;
     transform: translateY(-50%);
     cursor: pointer;
-    color: #ccc;
+    color: #575757;
 }
 
 footer {
@@ -235,4 +283,24 @@ footer {
 
 #content {
     flex: 1;
+}
+
+.scroll-container {
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+.button{
+    background-color: #033a6a;
+    padding: 7px;
+    border-radius: 5px;
+    text-decoration: none;
+    color: #ffffff;
+    font-size: 17px;
+    width: auto;
+
+}
+
+.button:hover{
+    background-color: #0056b3;
 }

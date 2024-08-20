@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <meta http-equiv="refresh" content="1800">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{% endblock %}</title>
@@ -11,8 +12,8 @@
 <body>
     <div id="content">
         <div class="logo-container">
-            <img src="https://aguascalientes.tecnm.mx/wp-content/uploads/2023/09/pleca_tecnm.jpg" alt="https://aguascalientes.tecnm.mx/wp-content/uploads/2023/09/pleca_tecnm.jpg">
-            <img src="https://aguascalientes.tecnm.mx/wp-content/uploads/2023/09/xtGahDD.png" alt="https://aguascalientes.tecnm.mx/wp-content/uploads/2023/09/xtGahDD.png">
+            <img src="https://aguascalientes.tecnm.mx/wp-content/uploads/2023/09/pleca_tecnm.jpg" alt="Logo 1">
+            <img src="https://aguascalientes.tecnm.mx/wp-content/uploads/2023/09/xtGahDD.png" alt="Logo 2">
         </div>
         <header>
             <div class="menu-bar">
@@ -34,11 +35,15 @@
             {% if 'user_id' in session %}
                 <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
             {% if session.get('user_role') == 'profesor' %}
-                <a href="{{ url_for('profesores_dashboard') }}"><i class="fas fa-user-tie"></i> Panel de Profesor</a>
+                <a href="{{ url_for('profesores_dashboard') }}"><i class="fas fa-user-tie"></i> Panel del Profesor {{ session['user_name'] }}</a>
             {% elif session.get('user_role') == 'alumno' %}
-                <a href="{{ url_for('alumnos_dashboard') }}"><i class="fas fa-user"></i> Panel de Alumno</a>
+                <a href="{{ url_for('alumnos_dashboard') }}"><i class="fas fa-user"></i> Panel del Alumn@ {{ session['user_name'] }}</a>
             {% endif %}
             {% endif %}
+        </div>
+        <div id="loading-screen">
+            <div class="spinner"></div>
+            <span>Cargando...</span>
         </div>
         <main class="main">
             {% block content %}

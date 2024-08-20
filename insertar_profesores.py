@@ -1,28 +1,44 @@
 import mysql.connector
 import bcrypt
 
-# Configuración de la base de datos
 db_config = {
     'user': 'root',
     'host': 'localhost',
-    'database': 'bd'
+    'database': 'bd',
+    'password': 'MiguelWorkbench009'
 }
-
+def insert_data(cursor, query, data):
+    try:
+        cursor.execute(query, data)
+    except mysql.connector.Error as err:
+        print(f"Error al insertar datos: {err}")
+        conn.rollback()
 # Datos del profesor
-no_trabajador = 12345678
-nombres = 'Miguel Angel'
-clave = '123456'
-
-# Hashing de la contraseña
-hashed_clave = bcrypt.hashpw(clave.encode('utf-8'), bcrypt.gensalt())
-
-# Conexión y consulta
+profesor_data = {
+    'NoTrabajador': 12345678,
+    'Nombres': 'Miguel Angel',
+    'Clave': bcrypt.hashpw('123456'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+}
+# Datos de los alumnos
+alumnos_data = [
+    (19020241, 'Sara Mayela', 'Ruvalcaba', 'Roque', '123456'),
+    (19150003, 'Jorge Humberto', 'Gobera', 'Ledezma', '123456'),
+    (19150114, 'Jessica', 'Avila', 'Navarro', '123456')
+]
+hashed_alumnos_data = [(no_control, nombres, apellidoP, apellidoM, bcrypt.hashpw(contrasena.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')) for no_control, nombres, apellidoP, apellidoM, contrasena in alumnos_data]
 try:
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO profesores (NoTrabajador, Nombres, Clave) VALUES (%s, %s, %s)",(no_trabajador, nombres, hashed_clave.decode('utf-8')))
+    insert_data(cursor, "INSERT INTO profesores (NoTrabajador, Nombres, Clave) VALUES (%s, %s, %s)", 
+                (profesor_data['NoTrabajador'], profesor_data['Nombres'], profesor_data['Clave']))
+    insert_data(cursor, "INSERT INTO alumnos (NoControl, Nombres, ApellidoP, ApellidoM, Contraseña) VALUES (%s, %s, %s, %s, %s)",
+                hashed_alumnos_data[0])
+    insert_data(cursor, "INSERT INTO alumnos (NoControl, Nombres, ApellidoP, ApellidoM, Contraseña) VALUES (%s, %s, %s, %s, %s)",
+                hashed_alumnos_data[1])
+    insert_data(cursor, "INSERT INTO alumnos (NoControl, Nombres, ApellidoP, ApellidoM, Contraseña) VALUES (%s, %s, %s, %s, %s)",
+                hashed_alumnos_data[2])
     conn.commit()
-    print("Profesor insertado correctamente.")
+    print("Profesor y alumnos insertados correctamente.")
 except mysql.connector.Error as err:
     print(f"Error: {err}")
 finally:

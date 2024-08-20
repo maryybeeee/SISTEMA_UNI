@@ -16,7 +16,9 @@
             <div class="form-group password-container">
                 <label for="key">Clave:</label>
                 <input type="password" id="key" name="key" minlength="6" required>
-                <span class="toggle-password" onclick="togglePasswordVisibility('key', this)">👁️</span>
+                <span class="toggle-password" onclick="togglePasswordVisibility('key', this)">
+                    <i class="fas fa-eye"></i>
+                </span>
             </div>
             <button type="submit">Iniciar Sesión</button>
             {% with messages = get_flashed_messages(with_categories=true) %}

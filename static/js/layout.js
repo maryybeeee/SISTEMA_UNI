@@ -55,17 +55,21 @@ document.addEventListener("DOMContentLoaded", function() {
         flashes.forEach(function(flash) {
             flash.style.display = 'none';
         });
-    }, 3000);
+    }, 5000);
 });
 
 function togglePasswordVisibility(passwordFieldId, iconElement) {
     var passwordField = document.getElementById(passwordFieldId);
+    var icon = iconElement.querySelector('i');
+    
     if (passwordField.type === "password") {
         passwordField.type = "text";
-        iconElement.textContent = "🙈";
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
     } else {
         passwordField.type = "password";
-        iconElement.textContent = "👁️";
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
     }
 }
 
@@ -83,3 +87,10 @@ function deleteValue(column) {
     document.body.appendChild(form);
     form.submit();
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    var loadingScreen = document.getElementById('loading-screen');
+    setTimeout(function() {
+        loadingScreen.classList.add('hidden');
+    }, 500); // Tiempo de espera antes de ocultar la pantalla de carga
+});
