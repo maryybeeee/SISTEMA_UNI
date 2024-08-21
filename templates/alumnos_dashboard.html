@@ -1,11 +1,11 @@
 {% extends 'layout.html' %}
-{% block title %}Usuari@ {{ session['user_name'] }}{% endblock %}
+{% block title %}Usuario {{ session['user_name'] }}{% endblock %}
 {% block content %}
 <head>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/alumnos_dashboard.css') }}">
 </head>
 <body>
-    <h1>Bienvenid@ {{ session['user_name'] }}</h1>
+    <h1>{{ session['user_name'] }}</h1>
     <div class="container">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}

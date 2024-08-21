@@ -18,11 +18,20 @@
         <header>
             <div class="menu-bar">
                 <ul>
-                    <li><a href="{{ url_for('index') }}"><i class="fas fa-home menu-icon"></i></a></li>
+                    <li><a href="{{ url_for('index') }}"><i class="fas fa-home menu-icon"></i><span>Inicio</span></a></li>
+                    {% if session.get('user_role') == 'profesor' %}
+                        <li><a href="{{ url_for('profesores_dashboard') }}"><i class="fa-regular fa-calendar menu-icon"></i><span>Jornadas Academicas</span></a></li>
+                        <li><a href="{{ url_for('profesores_dashboard') }}"><i class="fa-solid fa-book menu-icon"></i><span>Tutorias Alumnos</span></a></li>
+                    {% elif session.get('user_role') == 'alumno' %}
+                        <li><a href="{{ url_for('alumnos_dashboard') }}"><i class="fa-regular fa-calendar menu-icon"></i><span>Jornadas Academicas</span></a></li>
+                        <li><a href="{{ url_for('alumnos_dashboard') }}"><i class="fa-solid fa-book menu-icon"></i><span>Tutorias</span></a></li>
+                    {% endif %}
                 </ul>
-                <ul>
-                    <li><a id="user-icon"><i class="fas fa-user-circle menu-icon"></i></a></li>
-                </ul>
+                <div class="derecha">
+                    <ul>
+                        <li><a id="user-icon"><i class="fas fa-user-circle menu-icon"></i></a></li>
+                    </ul>
+                </div>
             </div>
         </header>
         <div id="side-menu" class="side-menu">

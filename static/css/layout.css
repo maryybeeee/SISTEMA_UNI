@@ -62,8 +62,18 @@ header {
 }
 
 .menu-bar ul li a {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     color: #ffffff;
     text-decoration: none;
+}
+
+.menu-bar ul li a span {
+    text-decoration: bold;
+    padding: 5px;
+    word-break: break-word;
 }
 
 .menu-icon {
@@ -72,6 +82,18 @@ header {
 
 .menu-bar i:hover{
     cursor: pointer;
+}
+
+.derecha {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+}
+
+.centrar{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
 }
 
 .side-menu {
@@ -253,11 +275,7 @@ button:hover {
 }
 
 .form-group.password-container .toggle-password {
-    position: absolute;
-    top: 62%;
-    left: 96%;
     font-size: 1.5em;
-    transform: translateY(-50%);
     cursor: pointer;
     color: #575757;
 }
