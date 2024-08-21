@@ -43,7 +43,7 @@ def index():
 # Ruta de registro de alumnos
 @app.route('/register_alumnos')
 def register_alumnos():
-    return render_template('register_alumnos.html')
+    return render_template('alumnos/register_alumnos.html')
 
 # Metodo para registrar a un alumno en la tabla alumnos
 @app.route('/registro_alumnos', methods=['POST', 'GET'])
@@ -87,7 +87,7 @@ def registro_alumnos():
             cursor.close()
             conn.close()
             print("Conexión a la base de datos cerrada")
-    return render_template('register_alumnos.html')
+    return render_template('alumnos/register_alumnos.html')
 
 # Ruta para servir archivos desde la carpeta de subida
 @app.route('/uploads/<user_id>/<filename>')
@@ -107,8 +107,8 @@ def uploaded_file(user_id, filename):
         abort(403)
 
 # Ruta para mostrar la tabla de las jornadas academicas de los alumnos
-@app.route('/alumnos_dashboard', methods=['GET', 'POST'])
-def alumnos_dashboard():
+@app.route('/alumnos_jornadas', methods=['GET', 'POST'])
+def alumnos_jornadas():
     # Muestra el dashboard de los alumnos donde pueden subir archivos
     if 'user_id' in session and session.get('user_role') == 'alumno':
         control_number = session['user_id']
@@ -123,7 +123,7 @@ def alumnos_dashboard():
                     # Verifica el tamaño del archivo
                     if len(file.read()) > max_file_size:
                         flash(f"El archivo '{file.filename}' supera los 100 KB. Por favor, sube un archivo más pequeño.", 'error')
-                        return redirect(url_for('alumnos_dashboard'))
+                        return redirect(url_for('alumnos_jornadas'))
                     # Regresar el cursor al inicio después de leer el archivo para verificar el tamaño
                     file.seek(0)
                     # Resto del código para guardar el archivo
@@ -195,7 +195,7 @@ def alumnos_dashboard():
             # Convertir los datos de la tabla en un diccionario para pasarlo a la plantilla
             alumnos_dict = [dict(zip(student_columns, row)) for row in alumno_data]
             print(f"Datos del alumno: {alumnos_dict}")
-            return render_template('alumnos_dashboard.html', alumnos=alumnos_dict, columns=student_columns)
+            return render_template('alumnos/alumnos_jornadas.html', alumnos=alumnos_dict, columns=student_columns)
         except mysql.connector.Error as err:
             print(f"Error en la base de datos: {err}")
             flash(f"Error en la base de datos: {err}", 'error')
@@ -210,7 +210,7 @@ def alumnos_dashboard():
 # Ruta que se mostrara al ingresar en el login de alumnos
 @app.route('/login_alumnos')
 def login_alumnos():
-    return render_template('login_alumnos.html')
+    return render_template('alumnos/login_alumnos.html')
 
 # Metodo para que los alumnos inicien sesion
 @app.route('/iniciar_alumnos', methods=['POST', 'GET'])
@@ -234,7 +234,7 @@ def iniciar_alumnos():
                 session['user_role'] = 'alumno'
                 session['user_name'] = user[1] + ' ' + user[2] + ' ' + user[3]
                 print(f"Ingreso exitoso para usuario: {session['user_name']}")
-                return redirect(url_for('alumnos_dashboard'))
+                return redirect(url_for('index'))
             else:
                 flash('Número de control o contraseña no válido', 'error')
                 print("Número de control o contraseña no válido")
@@ -246,12 +246,16 @@ def iniciar_alumnos():
             cursor.close()
             conn.close()
             print("Conexión a la base de datos cerrada")
-    return render_template('login_alumnos.html')
+    return render_template('alumnos/login_alumnos.html')
+
+@app.route('/alumnos_tutorias')
+def alumnos_tutorias():
+    return render_template('alumnos/alumnos_tutorias.html')
 
 # Ruta que se mostrará al ingresar en el login de profesores
 @app.route('/login_profesores')
 def login_profesores():
-    return render_template('login_profesores.html')
+    return render_template('profesores/login_profesores.html')
 
 # Metodo para que los profesores inicien sesion
 @app.route('/iniciar_profesores', methods=['POST', 'GET'])
@@ -277,7 +281,7 @@ def iniciar_profesores():
                     session['user_role'] = 'profesor'
                     session['user_name'] = user[1]
                     print(f"Ingreso exitoso para profesor: {session['user_name']}")
-                    return redirect(url_for('profesores_dashboard'))
+                    return redirect(url_for('index'))
                 else:
                     flash('Nombres o clave incorrectos', 'error')
                     print("Nombres o clave incorrectos")
@@ -292,11 +296,11 @@ def iniciar_profesores():
             cursor.close()
             conn.close()
             print("Conexión a la base de datos cerrada")
-    return render_template('login_profesores.html')
+    return render_template('profesores/login_profesores.html')
 
 # Ruta para mostrar la tabla de las jornadas académicas de los alumnos
-@app.route('/profesores_dashboard', methods=['POST', 'GET'])
-def profesores_dashboard():
+@app.route('/profesores_jornadas', methods=['POST', 'GET'])
+def profesores_jornadas():
     # Verifica si el usuario está autenticado y es un profesor
     if 'user_id' in session and session.get('user_role') == 'profesor':
         if request.method == 'POST':
@@ -421,7 +425,7 @@ def profesores_dashboard():
                     for row in alumnos_dict:
                         count_non_empty = sum(1 for key in row if key not in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres', 'Conteo', 'Estado', 'Atendidos'] and row[key] not in [None, ''])
                         row['Conteo'] = count_non_empty
-                    return render_template('profesores_dashboard.html', alumnos=alumnos_dict, columns=column_names)
+                    return render_template('profesores/profesores_jornadas.html', alumnos=alumnos_dict, columns=column_names)
                 except mysql.connector.Error as err:
                     print(f"Error en la base de datos: {err}")
                     flash(f"Error en la base de datos: {err}", 'error')
@@ -431,7 +435,7 @@ def profesores_dashboard():
                     conn.close()
                     print("Conexión a la base de datos cerrada")
             elif 'search_cancel' in request.form:
-                return redirect(url_for('profesores_dashboard'))
+                return redirect(url_for('profesores_jornadas'))
         try:
             # Conecta a la base de datos
             conn = mysql.connector.connect(**db_config)
@@ -468,7 +472,7 @@ def profesores_dashboard():
             for row in alumnos_dict:
                 count_non_empty = sum(1 for key in row if key not in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres', 'Conteo', 'Estado', 'Atendidos'] and row[key] not in [None, ''])
                 row['Conteo'] = count_non_empty
-            return render_template('profesores_dashboard.html', alumnos=alumnos_dict, columns=column_names)
+            return render_template('profesores/profesores_jornadas.html', alumnos=alumnos_dict, columns=column_names)
         except mysql.connector.Error as err:
             print(f"Error en la base de datos: {err}")
             flash(f"Error en la base de datos: {err}", 'error')
@@ -546,7 +550,7 @@ def edit_record(record_id):
                     cursor.close()
                     conn.close()
                     print("Conexión a la base de datos cerrada")
-                return redirect(url_for('profesores_dashboard'))
+                return redirect(url_for('profesores_jornadas'))
             # Manejo de eliminación de registros
             elif 'delete_record' in request.form:
                 print(f"Iniciando eliminación del registro {record_id}")
@@ -590,11 +594,11 @@ def edit_record(record_id):
                     cursor.close()
                     conn.close()
                     print("Conexión a la base de datos cerrada")
-                return redirect(url_for('profesores_dashboard'))
+                return redirect(url_for('profesores_jornadas'))
             # Manejo de la acción de volver al dashboard
             elif 'go_back' in request.form:
                 print("Regresando al dashboard de profesores")
-                return redirect(url_for('profesores_dashboard'))
+                return redirect(url_for('profesores_jornadas'))
         # Manejo de la solicitud GET para cargar el registro
         else:
             print(f"Cargando datos para el registro {record_id}")
@@ -607,15 +611,15 @@ def edit_record(record_id):
                 record = cursor.fetchone()
                 if record:
                     print(f"Registro encontrado: {record}")
-                    return render_template('action_pages/actualizar_alumno.html', record=record)
+                    return render_template('action_pages/editar_alumno_jornadas.html', record=record)
                 else:
                     print(f"Registro {record_id} no encontrado")
                     flash('Registro no encontrado', 'error')
-                    return redirect(url_for('profesores_dashboard'))
+                    return redirect(url_for('profesores_jornadas'))
             except mysql.connector.Error as err:
                 print(f"Error en la base de datos: {err}")
                 flash(f"Error en la base de datos: {err}", 'error')
-                return redirect(url_for('profesores_dashboard'))
+                return redirect(url_for('profesores_jornadas'))
             finally:
                 # Cierra la conexion a la base de datos
                 cursor.close()
@@ -623,7 +627,12 @@ def edit_record(record_id):
                 print("Conexión a la base de datos cerrada")
     # Redirige al dashboard de profesores si el usuario no esta autenticado o no es profesor
     print("Redirigiendo al dashboard de profesores")
-    return redirect(url_for('profesores_dashboard'))
+    return redirect(url_for('profesores_jornadas'))
+
+@app.route('/profesores_tutorias')
+def profesores_tutorias():
+    return render_template('profesores/profesores_tutorias.html')
+
 
 # Metodo para manejar el cierre de sesion del usuario
 @app.route('/logout')
