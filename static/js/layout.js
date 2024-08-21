@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Función para abrir el menú lateral
     function openSideMenu() {
-        sideMenu.style.width = '350px';
+        sideMenu.style.width = '250px';
     }
 
     // Función para cerrar el menú lateral

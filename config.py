@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 # Configuración de la base de datos
 db_config = {
@@ -9,9 +10,8 @@ db_config = {
     'port': 3306
 }
 
-#Clave secreta
-secret_key = os.urandom(24)
-
-#Ruta de subida de rutas de los archivos
-UPLOAD_FOLDER = 'static/uploads'
-ALLOWED_EXTENSIONS = {'pdf'}
+class Config:
+    SECRET_KEY = os.urandom(24)
+    PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
+    UPLOAD_FOLDER = 'static/uploads'
+    ALLOWED_EXTENSIONS = {'pdf'}

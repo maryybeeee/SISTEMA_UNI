@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file, send_from_directory, abort
-from config import db_config, secret_key, UPLOAD_FOLDER, ALLOWED_EXTENSIONS
+from config import db_config, Config
 from werkzeug.utils import secure_filename
-from datetime import timedelta
 import bcrypt
 import mysql.connector
 import logging
@@ -9,13 +8,12 @@ import os
 
 # Configuracion de la aplicación Flask
 app = Flask(__name__)
-app.secret_key = secret_key
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config.from_object(Config)
+app.secret_key = app.config['SECRET_KEY']
 
 # Verifica si la carpeta de subidas existe, si no, la crea
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+if not os.path.exists(app.config ['UPLOAD_FOLDER']):
+    os.makedirs(app.config ['UPLOAD_FOLDER'])
 
 def get_unique_filename(filename):
     # Genera un nombre unico para el archivo si ya existe uno con el mismo nombre
@@ -30,7 +28,7 @@ def get_unique_filename(filename):
 
 def allowed_file(filename):
     # Verifica si el archivo tiene una extensión permitida
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 @app.template_filter('basename')
 def basename_filter(path):
