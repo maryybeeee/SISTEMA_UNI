@@ -497,8 +497,8 @@ def profesores_jornadas():
     return redirect(url_for('iniciar_profesores'))
 
 # Ruta para editar un registro de alumno
-@app.route('/edit_record/<int:record_id>', methods=['GET', 'POST'])
-def edit_record(record_id):
+@app.route('/edit_record_jornadas/<int:record_id>', methods=['GET', 'POST'])
+def edit_record_jornadas(record_id):
     # Verifica si el usuario esta autenticado y es un profesor
     if 'user_id' in session and session.get('user_role') == 'profesor':
         if request.method == 'POST':
