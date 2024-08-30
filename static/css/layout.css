@@ -71,7 +71,7 @@ header {
 }
 
 .menu-bar ul li a span {
-    text-decoration: bold;
+    font-size: 16px;
     padding: 5px;
     word-break: break-word;
 }

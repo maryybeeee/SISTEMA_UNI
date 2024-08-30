@@ -65,20 +65,32 @@ def registro_alumnos():
             # Verifica si el numero de control ya existe en jornadas_academicas
             cursor.execute("SELECT * FROM jornadas_academicas WHERE NoControl = %s", (control_number,))
             jornada_academica = cursor.fetchone()
-            if jornada_academica:
+            # Verifica si el numero de control ya existe en tutorias
+            cursor.execute("SELECT * FROM tutorias WHERE NoControl = %s", (control_number,))
+            tutoria = cursor.fetchone()
+            if jornada_academica or tutoria:
                 # Verifica si el alumno ya esta registrado en la tabla alumnos
                 cursor.execute("SELECT * FROM alumnos WHERE NoControl = %s", (control_number,))
                 user = cursor.fetchone()
                 if user:
                     flash('Número de control ya registrado', 'error')
                 else:
+                    # Determina la tabla de referencia
+                    tabla_referencia = []
+                    if jornada_academica:
+                        tabla_referencia.append('jornadas_academicas')
+                    if tutoria:
+                        tabla_referencia.append('tutorias')
+                    # Convierte la lista en una cadena separada por comas
+                    tabla_ref_str = ', '.join(tabla_referencia)
+
                     # Inserta un nuevo registro en la tabla alumnos
-                    cursor.execute("INSERT INTO alumnos (Nombres, ApellidoP, ApellidoM, Contraseña, NoControl) VALUES (%s, %s, %s, %s, %s)", (names, last_name1, last_name2, password, control_number,))
+                    cursor.execute("INSERT INTO alumnos (Nombres, ApellidoP, ApellidoM, Contraseña, Tabla_ref, NoControl) VALUES (%s, %s, %s, %s, %s, %s)",(names, last_name1, last_name2, password, tabla_ref_str, control_number))
                     conn.commit()
                     print(f"Alumno registrado: {control_number}")
                     return redirect(url_for('login_alumnos'))
             else:
-                flash('Número de control no encontrado en jornadas académicas', 'error')
+                flash('Número de control no encontrado en jornadas académicas ni en tutorías', 'error')
         except mysql.connector.Error as err:
             print(f"Error en la base de datos: {err}")
             flash(f"Error en la base de datos: {err}", 'error')
@@ -629,7 +641,7 @@ def edit_record(record_id):
     print("Redirigiendo al dashboard de profesores")
     return redirect(url_for('profesores_jornadas'))
 
-@app.route('/profesores_tutorias')
+@app.route('/profesores_tutorias', methods=['POST', 'GET'])
 def profesores_tutorias():
     return render_template('profesores/profesores_tutorias.html')
 
