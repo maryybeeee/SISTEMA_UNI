@@ -139,7 +139,8 @@ def alumnos_jornadas():
                     # Regresar el cursor al inicio después de leer el archivo para verificar el tamaño
                     file.seek(0)
                     # Resto del código para guardar el archivo
-                    upload_folder = os.path.join(app.config['UPLOAD_FOLDER'], str(control_number))
+                    tipo_carpeta = 'jornadas_academicas'
+                    upload_folder = os.path.join(app.config['UPLOAD_FOLDER'], str(control_number), tipo_carpeta)
                     # Si la carpeta no existe, la crea
                     if not os.path.exists(upload_folder):
                         os.makedirs(upload_folder)
@@ -155,7 +156,7 @@ def alumnos_jornadas():
                         cursor = conn.cursor()
                         print("Conexión a la base de datos establecida")
                         # Verifica si ya existe un archivo para esa columna en la base de datos
-                        cursor.execute("SELECT id, ruta_archivo FROM rutas_pdf WHERE no_control = %s AND tabla_referencia = %s", (control_number, column_name))
+                        cursor.execute("SELECT ID, Ruta_archivo FROM rutas_pdf_jornadas WHERE NoControl = %s AND Columna_ref = %s", (control_number, column_name))
                         existing_file = cursor.fetchone()
                         if existing_file:
                             existing_id, existing_path = existing_file
@@ -165,19 +166,19 @@ def alumnos_jornadas():
                             if os.path.exists(existing_path):
                                 os.remove(existing_path)
                             # Elimina el registro existente en la base de datos
-                            cursor.execute("DELETE FROM rutas_pdf WHERE id = %s", (existing_id,))
+                            cursor.execute("DELETE FROM rutas_pdf_jornadas WHERE ID = %s", (existing_id,))
                         # Guardar el nuevo archivo
                         file.save(save_path)
                         print(f"Archivo guardado en {save_path}")
                         # Insertar o actualizar la ruta del archivo en la base de datos
-                        cursor.execute("INSERT INTO rutas_pdf (no_control, nombre_archivo, ruta_archivo, tabla_referencia) VALUES (%s, %s, %s, %s)", (control_number, filename, save_path, column_name))
+                        cursor.execute("INSERT INTO rutas_pdf_jornadas (NoControl, Nombre_archivo, Ruta_archivo, Columna_ref) VALUES (%s, %s, %s, %s)", (control_number, filename, save_path, column_name))
                         # Actualizar la tabla jornadas_academicas
                         cursor.execute(f"UPDATE jornadas_academicas SET `{column_name}` = %s WHERE NoControl = %s", (filename, control_number))
-                        # Reordenar los IDs en rutas_pdf para que sean consecutivos
+                        # Reordenar los IDs en rutas_pdf_jornadas para que sean consecutivos
                         cursor.execute("SET @count = 0;")
-                        cursor.execute("UPDATE rutas_pdf SET id = @count:= @count + 1;")
-                        cursor.execute("ALTER TABLE rutas_pdf AUTO_INCREMENT = 1;")
-                        print("IDs en rutas_pdf reordenados")
+                        cursor.execute("UPDATE rutas_pdf_jornadas SET ID = @count:= @count + 1;")
+                        cursor.execute("ALTER TABLE rutas_pdf_jornadas AUTO_INCREMENT = 1;")
+                        print("IDs en rutas_pdf_jornadas reordenados")
                         conn.commit()
                         print("Cambios guardados en la base de datos")
                         if existing_file:
@@ -238,7 +239,7 @@ def iniciar_alumnos():
             cursor = conn.cursor()
             print("Conexión a la base de datos establecida")
             # Busca al usuario en la base de datos
-            cursor.execute("SELECT NoControl, Nombres, ApellidoP, ApellidoM, Contraseña FROM alumnos WHERE NoControl = %s", (control_number,))
+            cursor.execute("SELECT NoControl, Nombres, ApellidoP, ApellidoM, Contraseña, Tabla_ref FROM alumnos WHERE NoControl = %s", (control_number,))
             user = cursor.fetchone()
             # Verifica si el usuario existe y la contraseña es correcta
             if user and bcrypt.checkpw(password.encode('utf-8'), user[4].encode('utf-8')):
@@ -253,16 +254,86 @@ def iniciar_alumnos():
         except mysql.connector.Error as err:
             print(f"Error en la base de datos: {err}")
             flash(f"Error en la base de datos: {err}", 'error')
+    return render_template('alumnos/login_alumnos.html')
+
+@app.route('/alumnos_tutorias', methods=['GET', 'POST'])
+def alumnos_tutorias():
+    if 'user_id' in session and session.get('user_role') == 'alumno':
+        control_number = session['user_id']
+        if request.method == 'POST':
+            files = request.files.getlist('file')
+            column_names = request.form.getlist('column_name')
+            max_file_size = 100 * 1024  # 100 KB en bytes
+            for file, column_name in zip(files, column_names):
+                if file and column_name:
+                    if len(file.read()) > max_file_size:
+                        flash(f"El archivo '{file.filename}' supera los 100 KB. Por favor, sube un archivo más pequeño.", 'error')
+                        return redirect(url_for('alumnos_tutorias'))
+                    file.seek(0)
+                    tipo_carpeta = 'tutorias'
+                    upload_folder = os.path.join(app.config['UPLOAD_FOLDER'], str(control_number), tipo_carpeta)
+                    if not os.path.exists(upload_folder):
+                        os.makedirs(upload_folder)
+                        print(f"Creada carpeta para el usuario {control_number}: {upload_folder}")
+                    filename = secure_filename(file.filename)
+                    save_path = os.path.join(upload_folder, filename)
+                    print(f"Ruta para guardar el archivo: {save_path}")
+                    try:
+                        conn = mysql.connector.connect(**db_config)
+                        cursor = conn.cursor()
+                        print("Conexión a la base de datos establecida")
+                        cursor.execute("SELECT ID, Ruta_archivo FROM rutas_pdf_tutorias WHERE NoControl = %s AND Columna_ref = %s", (control_number, column_name))
+                        existing_file = cursor.fetchone()
+                        if existing_file:
+                            existing_id, existing_path = existing_file
+                            flash(f"El archivo ({filename}) asociado con la columna '{column_name}' ya existe. Se reemplazará el archivo anterior.", 'info')
+                            print(f"Reemplazando archivo existente en {existing_path}")
+                            if os.path.exists(existing_path):
+                                os.remove(existing_path)
+                            cursor.execute("DELETE FROM rutas_pdf_tutorias WHERE ID = %s", (existing_id,))
+                        file.save(save_path)
+                        print(f"Archivo guardado en {save_path}")
+                        cursor.execute("INSERT INTO rutas_pdf_tutorias (NoControl, Nombre_archivo, Ruta_archivo, Columna_ref) VALUES (%s, %s, %s, %s)", (control_number, filename, save_path, column_name))
+                        cursor.execute(f"UPDATE tutorias SET `{column_name}` = %s WHERE NoControl = %s", (filename, control_number))
+                        cursor.execute("SET @count = 0;")
+                        cursor.execute("UPDATE rutas_pdf_tutorias SET ID = @count:= @count + 1;")
+                        cursor.execute("ALTER TABLE rutas_pdf_tutorias AUTO_INCREMENT = 1;")
+                        print("IDs en rutas_pdf_tutorias reordenados")
+                        conn.commit()
+                        print("Cambios guardados en la base de datos")
+                        if existing_file:
+                            flash(f"Archivo '{filename}' reemplazado con éxito.", 'success')
+                        else:
+                            flash(f"Archivo '{filename}' subido y guardado con éxito", 'success')
+                    except mysql.connector.Error as err:
+                        print(f"Error en la base de datos: {err}")
+                        flash(f"Error en la base de datos: {err}", 'error')
+                    finally:
+                        cursor.close()
+                        conn.close()
+                        print("Conexión a la base de datos cerrada")
+        try:
+            conn = mysql.connector.connect(**db_config)
+            cursor = conn.cursor()
+            print("Conexión a la base de datos establecida")
+            cursor.execute("SHOW COLUMNS FROM tutorias")
+            all_columns = [row[0] for row in cursor.fetchall()]
+            student_columns = [col for col in all_columns if col not in ['Estado', 'Conteo', 'Atendidos']]
+            cursor.execute("SELECT * FROM tutorias WHERE NoControl = %s", (control_number,))
+            alumno_data = cursor.fetchall()
+            alumnos_dict = [dict(zip(student_columns, row)) for row in alumno_data]
+            print(f"Datos del alumno: {alumnos_dict}")
+            return render_template('alumnos/alumnos_tutorias.html', alumnos=alumnos_dict, columns=student_columns)
+        except mysql.connector.Error as err:
+            print(f"Error en la base de datos: {err}")
+            flash(f"Error en la base de datos: {err}", 'error')
+            return redirect(url_for('iniciar_alumnos'))
         finally:
-            # Cierra la conexion a la base de datos
             cursor.close()
             conn.close()
             print("Conexión a la base de datos cerrada")
-    return render_template('alumnos/login_alumnos.html')
+    return redirect(url_for('login_alumnos'))
 
-@app.route('/alumnos_tutorias')
-def alumnos_tutorias():
-    return render_template('alumnos/alumnos_tutorias.html')
 
 # Ruta que se mostrará al ingresar en el login de profesores
 @app.route('/login_profesores')
@@ -375,14 +446,14 @@ def profesores_jornadas():
                                     print(f"Archivo no encontrado: {file_path}")
                             else:
                                 print(f"Archivo no válido en la base de datos: NoControl {no_control}, Archivo {file_name}")
-                        # Eliminar registros de rutas_pdf, jornadas_academicas y alumnos
-                        cursor.execute("DELETE FROM rutas_pdf WHERE tabla_referencia = %s", (column_name,))
-                        print(f"Registros eliminados en rutas_pdf para {column_name}")
-                        # Reordenar los IDs en rutas_pdf para que sean consecutivos
+                        # Eliminar registros de rutas_pdf_jornadas, jornadas_academicas y alumnos
+                        cursor.execute("DELETE FROM rutas_pdf_jornadas WHERE Columna_ref = %s", (column_name,))
+                        print(f"Registros eliminados en rutas_pdf_jornadas para {column_name}")
+                        # Reordenar los IDs en rutas_pdf_jornadas para que sean consecutivos
                         cursor.execute("SET @count = 0;")
-                        cursor.execute("UPDATE rutas_pdf SET id = @count:= @count + 1;")
-                        cursor.execute("ALTER TABLE rutas_pdf AUTO_INCREMENT = 1;")
-                        print("IDs en rutas_pdf reordenados")
+                        cursor.execute("UPDATE rutas_pdf_jornadas SET ID = @count:= @count + 1;")
+                        cursor.execute("ALTER TABLE rutas_pdf_jornadas AUTO_INCREMENT = 1;")
+                        print("IDs en rutas_pdf_jornadas reordenados")
                         # Elimina la columna de la tabla
                         cursor.execute(f"ALTER TABLE jornadas_academicas DROP COLUMN `{column_name}`")
                         conn.commit()
@@ -421,7 +492,7 @@ def profesores_jornadas():
                     column_names = ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres'] + columns + ['Estado', 'Atendidos']
                     alumnos_dict = [dict(zip(column_names, row)) for row in alumnos]
                     # Obtiene los archivos asociados a los alumnos
-                    cursor.execute("SELECT * FROM rutas_pdf WHERE no_control = %s", (number_control,))
+                    cursor.execute("SELECT * FROM rutas_pdf_jornadas WHERE NoControl = %s", (number_control,))
                     archivos = cursor.fetchall()
                     # Crea un diccionario para almacenar los archivos por numero de control
                     archivos_dict = {}
@@ -468,7 +539,7 @@ def profesores_jornadas():
             column_names = ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres'] + columns + ['Estado', 'Atendidos']
             alumnos_dict = [dict(zip(column_names, row)) for row in alumnos]
             # Obtiene los archivos asociados a los alumnos
-            cursor.execute("SELECT * FROM rutas_pdf")
+            cursor.execute("SELECT * FROM rutas_pdf_jornadas")
             archivos = cursor.fetchall()
             # Crea un diccionario para almacenar los archivos por numero de control
             archivos_dict = {}
@@ -527,11 +598,11 @@ def edit_record_jornadas(record_id):
                         cursor.execute(f"UPDATE jornadas_academicas SET `{column_name}` = NULL WHERE NoControl = %s", (record_id,))
                         print(f"Columna {column_name} limpiada")
                         # Obtener las rutas de archivo asociadas al 'record_id' y 'column_name'
-                        cursor.execute("SELECT ruta_archivo FROM rutas_pdf WHERE no_control = %s AND tabla_referencia = %s", (record_id, column_name))
+                        cursor.execute("SELECT ruta_archivo FROM rutas_pdf_jornadas WHERE NoControl = %s AND Columna_ref = %s", (record_id, column_name))
                         file_paths = cursor.fetchall()
                         # Verificación adicional para asegurarse de que se encontraron rutas de archivos
                         if not file_paths:
-                            print(f"No se encontraron rutas de archivos para no_control={record_id} y tabla_referencia={column_name}")
+                            print(f"No se encontraron rutas de archivos para NoControl={record_id} y Columna_ref={column_name}")
                         else:
                             print(f"Rutas de archivos encontradas para {column_name}: {file_paths}")
                         # Recorre cada ruta de archivo obtenida
@@ -543,14 +614,14 @@ def edit_record_jornadas(record_id):
                                 os.remove(file_path)
                             else:
                                 print(f"Archivo no encontrado: {file_path}")
-                            # Elimina el registro correspondiente en la tabla 'rutas_pdf'
-                            cursor.execute("DELETE FROM rutas_pdf WHERE no_control = %s AND tabla_referencia = %s", (record_id, column_name))
-                            print(f"Registro eliminado en rutas_pdf para {column_name}")
-                        # Reordena los IDs en rutas_pdf para que sean consecutivos
+                            # Elimina el registro correspondiente en la tabla 'rutas_pdf_jornadas'
+                            cursor.execute("DELETE FROM rutas_pdf_jornadas WHERE NoControl = %s AND Columna_ref = %s", (record_id, column_name))
+                            print(f"Registro eliminado en rutas_pdf_jornadas para {column_name}")
+                        # Reordena los IDs en rutas_pdf_jornadas para que sean consecutivos
                         cursor.execute("SET @count = 0;")
-                        cursor.execute("UPDATE rutas_pdf SET id = @count:= @count + 1;")
-                        cursor.execute("ALTER TABLE rutas_pdf AUTO_INCREMENT = 1;")
-                        print("IDs en rutas_pdf reordenados")
+                        cursor.execute("UPDATE rutas_pdf_jornadas SET ID = @count:= @count + 1;")
+                        cursor.execute("ALTER TABLE rutas_pdf_jornadas AUTO_INCREMENT = 1;")
+                        print("IDs en rutas_pdf_jornadas reordenados")
                     conn.commit()
                     print("Cambios guardados con éxito")
                     flash('Cambios guardados con éxito', 'success')
@@ -572,7 +643,7 @@ def edit_record_jornadas(record_id):
                     cursor = conn.cursor()
                     print("Conexión a la base de datos establecida")
                     # Eliminar archivos asociados al registro
-                    cursor.execute("SELECT ruta_archivo FROM rutas_pdf WHERE no_control = %s", (record_id,))
+                    cursor.execute("SELECT ruta_archivo FROM rutas_pdf_jornadas WHERE NoControl = %s", (record_id,))
                     file_paths = cursor.fetchall()
                     print(f"Rutas de archivos encontradas: {file_paths}")
                     # Recorre cada ruta de archivo obtenida
@@ -585,8 +656,8 @@ def edit_record_jornadas(record_id):
                         else:
                             print(f"Archivo no encontrado: {file_path}")
                     # Eliminar registros de rutas_pdf, jornadas_academicas y alumnos
-                    cursor.execute("DELETE FROM rutas_pdf WHERE no_control = %s", (record_id,))
-                    print(f"Registros eliminados en rutas_pdf para {record_id}")
+                    cursor.execute("DELETE FROM rutas_pdf_jornadas WHERE NoControl = %s", (record_id,))
+                    print(f"Registros eliminados en rutas_pdf_jornadas para {record_id}")
                     cursor.execute("DELETE FROM jornadas_academicas WHERE NoControl = %s", (record_id,))
                     print(f"Registros eliminados en jornadas_academicas para {record_id}")
                     cursor.execute("DELETE FROM alumnos WHERE NoControl = %s", (record_id,))
@@ -594,9 +665,9 @@ def edit_record_jornadas(record_id):
                     conn.commit()
                     # Reordenar los IDs en rutas_pdf para que sean consecutivos
                     cursor.execute("SET @count = 0;")
-                    cursor.execute("UPDATE rutas_pdf SET id = @count:= @count + 1;")
-                    cursor.execute("ALTER TABLE rutas_pdf AUTO_INCREMENT = 1;")
-                    print("IDs en rutas_pdf reordenados")
+                    cursor.execute("UPDATE rutas_pdf_jornadas SET ID = @count:= @count + 1;")
+                    cursor.execute("ALTER TABLE rutas_pdf_jornadas AUTO_INCREMENT = 1;")
+                    print("IDs en rutas_pdf_jornadas reordenados")
                     flash('Registro y archivos eliminados con éxito', 'success')
                 except mysql.connector.Error as err:
                     print(f"Error en la base de datos: {err}")
@@ -643,7 +714,318 @@ def edit_record_jornadas(record_id):
 
 @app.route('/profesores_tutorias', methods=['POST', 'GET'])
 def profesores_tutorias():
-    return render_template('profesores/profesores_tutorias.html')
+    # Verifica si el usuario está autenticado y es un profesor
+    if 'user_id' in session and session.get('user_role') == 'profesor':
+        if request.method == 'POST':
+            # Manejo de la adición de columnas
+            if 'add_column' in request.form:
+                column_name = request.form['column_name']
+                if column_name:
+                    print(f"Intentando agregar columna: {column_name}")
+                    try:
+                        # Conecta a la base de datos
+                        conn = mysql.connector.connect(**db_config)
+                        cursor = conn.cursor()
+                        print("Conexión a la base de datos establecida")
+                        # Obtiene las columnas actuales de la tabla
+                        cursor.execute("SHOW COLUMNS FROM tutorias")
+                        columns = [row[0] for row in cursor.fetchall() if row[0] not in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres', 'Estado']]
+                        print(f"Columnas existentes: {columns}")
+                        # Agrega la nueva columna después de 'Conteo' si existe, o al final de la tabla
+                        if 'Conteo' in columns:
+                            conteo_column = columns.index('Conteo')
+                            cursor.execute(f"ALTER TABLE tutorias ADD COLUMN `{column_name}` VARCHAR(255) AFTER `{columns[conteo_column-1]}`")
+                        else:
+                            cursor.execute(f"ALTER TABLE tutorias ADD COLUMN `{column_name}` VARCHAR(255)")
+                        conn.commit()
+                        flash('Columna agregada con éxito', 'success')
+                        print(f"Columna {column_name} agregada con éxito")
+                    except mysql.connector.Error as err:
+                        print(f"Error en la base de datos: {err}")
+                        flash(f"Error en la base de datos: {err}", 'error')
+                    finally:
+                        # Cierra la conexión a la base de datos
+                        cursor.close()
+                        conn.close()
+                        print("Conexión a la base de datos cerrada")
+            # Manejo de la eliminación de columnas
+            elif 'remove_column' in request.form:
+                column_name = request.form['column_name']
+                if column_name:
+                    print(f"Intentando eliminar columna: {column_name}")
+                    try:
+                        # Conecta a la base de datos
+                        conn = mysql.connector.connect(**db_config)
+                        cursor = conn.cursor()
+                        print("Conexión a la base de datos establecida")
+                        # Obtiene los archivos asociados con la columna a eliminar
+                        cursor.execute(f"SELECT NoControl, `{column_name}` FROM tutorias")
+                        file_paths = cursor.fetchall()
+                        print(f"Rutas de archivos encontrados: {file_paths}")
+                        # Recorre los resultados de la consulta para eliminar los archivos
+                        for no_control, file_name in file_paths:
+                            if file_name: # Verifica que file_name no sea None o una cadena vacía
+                                # Construye la ruta completa usando el número de control
+                                file_path = os.path.join('static', 'uploads', str(no_control), file_name)
+                                file_path = os.path.abspath(file_path) # Convierte a una ruta absoluta
+                                print(f"Verificando la existencia del archivo: {file_path}")
+                                if os.path.exists(file_path):
+                                    print(f"Eliminando archivo: {file_path}")
+                                    os.remove(file_path)
+                                else:
+                                    print(f"Archivo no encontrado: {file_path}")
+                            else:
+                                print(f"Archivo no válido en la base de datos: NoControl {no_control}, Archivo {file_name}")
+                        # Eliminar registros de rutas_pdf_tutorias y tutorias
+                        cursor.execute("DELETE FROM rutas_pdf_tutorias WHERE Columna_ref = %s", (column_name,))
+                        print(f"Registros eliminados en rutas_pdf_tutorias para {column_name}")
+                        # Reordenar los IDs en rutas_pdf_tutorias para que sean consecutivos
+                        cursor.execute("SET @count = 0;")
+                        cursor.execute("UPDATE rutas_pdf_tutorias SET ID = @count:= @count + 1;")
+                        cursor.execute("ALTER TABLE rutas_pdf_tutorias AUTO_INCREMENT = 1;")
+                        print("IDs en rutas_pdf_tutorias reordenados")
+                        # Elimina la columna de la tabla
+                        cursor.execute(f"ALTER TABLE tutorias DROP COLUMN `{column_name}`")
+                        conn.commit()
+                        flash('Columna eliminada con éxito', 'success')
+                        print(f"Columna {column_name} eliminada con éxito")
+                    except mysql.connector.Error as err:
+                        print(f"Error en la base de datos: {err}")
+                        flash(f"Error en la base de datos: {err}", 'error')
+                    except Exception as e:
+                        flash(f"Error al eliminar archivos: {e}", 'error')
+                        print(f"Error al eliminar archivos: {e}")
+                    finally:
+                        # Cierra la conexión a la base de datos
+                        cursor.close()
+                        conn.close()
+                        print("Conexión a la base de datos cerrada")
+            elif 'search_student' in request.form:
+                number_control = request.form['number_control']
+                try:
+                    # Conecta a la base de datos
+                    conn = mysql.connector.connect(**db_config)
+                    cursor = conn.cursor()
+                    print("Conexión a la base de datos establecida")
+                    # Obtiene las columnas actuales de la tabla
+                    cursor.execute("SHOW COLUMNS FROM tutorias")
+                    columns = [row[0] for row in cursor.fetchall() if row[0] not in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres', 'Estado']]
+                    print(f"Columnas existentes: {columns}")
+                    # Ajusta la lista de columnas para incluir 'Conteo' en la posición correcta
+                    if 'Conteo' in columns:
+                        conteo_column = columns.index('Conteo')
+                        columns = columns[:conteo_column]
+                        columns.append('Conteo')
+                    cursor.execute("SELECT * FROM tutorias WHERE NoControl = %s", (number_control,))
+                    alumnos = cursor.fetchall()
+                    # Prepara los datos de los alumnos para la plantilla
+                    column_names = ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres'] + columns + ['Estado']
+                    alumnos_dict = [dict(zip(column_names, row)) for row in alumnos]
+                    # Obtiene los archivos asociados a los alumnos
+                    cursor.execute("SELECT * FROM rutas_pdf_tutorias WHERE NoControl = %s", (number_control,))
+                    archivos = cursor.fetchall()
+                    # Crea un diccionario para almacenar los archivos por número de control
+                    archivos_dict = {}
+                    # Recorre los resultados de la consulta
+                    for archivo in archivos:
+                        no_control = archivo[0] # Obtiene el número de control del alumno
+                        if no_control not in archivos_dict:
+                            # Si el número de control no está en el diccionario, inicializa una lista vacía
+                            archivos_dict[no_control] = []
+                        # Agrega la información del archivo (nombre y ruta) a la lista del número de control correspondiente
+                        archivos_dict[no_control].append({'nombre': archivo[1], 'ruta': os.path.basename(archivo[2])})
+                    # Calcula el conteo de valores no vacíos para cada alumno
+                    for row in alumnos_dict:
+                        count_non_empty = sum(1 for key in row if key not in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres', 'Conteo', 'Estado'] and row[key] not in [None, ''])
+                        row['Conteo'] = count_non_empty
+                    return render_template('profesores/profesores_tutorias.html', alumnos=alumnos_dict, columns=column_names)
+                except mysql.connector.Error as err:
+                    print(f"Error en la base de datos: {err}")
+                    flash(f"Error en la base de datos: {err}", 'error')
+                finally:
+                    # Cierra la conexión a la base de datos
+                    cursor.close()
+                    conn.close()
+                    print("Conexión a la base de datos cerrada")
+            elif 'search_cancel' in request.form:
+                return redirect(url_for('profesores_tutorias'))
+        try:
+            # Conecta a la base de datos
+            conn = mysql.connector.connect(**db_config)
+            cursor = conn.cursor()
+            print("Conexión a la base de datos establecida")
+            # Obtiene las columnas actuales de la tabla
+            cursor.execute("SHOW COLUMNS FROM tutorias")
+            columns = [row[0] for row in cursor.fetchall() if row[0] not in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres', 'Estado']]
+            print(f"Columnas existentes: {columns}")
+            # Ajusta la lista de columnas para incluir 'Conteo' en la posición correcta
+            if 'Conteo' in columns:
+                conteo_column = columns.index('Conteo')
+                columns = columns[:conteo_column]
+                columns.append('Conteo')
+            cursor.execute("SELECT * FROM tutorias")
+            alumnos = cursor.fetchall()
+            # Prepara los datos de los alumnos para la plantilla
+            column_names = ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres'] + columns + ['Estado']
+            alumnos_dict = [dict(zip(column_names, row)) for row in alumnos]
+            # Obtiene los archivos asociados a los alumnos
+            cursor.execute("SELECT * FROM rutas_pdf_tutorias")
+            archivos = cursor.fetchall()
+            # Crea un diccionario para almacenar los archivos por número de control
+            archivos_dict = {}
+            # Recorre los resultados de la consulta
+            for archivo in archivos:
+                no_control = archivo[0] # Obtiene el número de control del alumno
+                if no_control not in archivos_dict:
+                    # Si el número de control no está en el diccionario, inicializa una lista vacía
+                    archivos_dict[no_control] = []
+                # Agrega la información del archivo (nombre y ruta) a la lista del número de control correspondiente
+                archivos_dict[no_control].append({'nombre': archivo[1], 'ruta': os.path.basename(archivo[2])})
+            # Calcula el conteo de valores no vacíos para cada alumno
+            for row in alumnos_dict:
+                count_non_empty = sum(1 for key in row if key not in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres', 'Conteo', 'Estado'] and row[key] not in [None, ''])
+                row['Conteo'] = count_non_empty
+            return render_template('profesores/profesores_tutorias.html', alumnos=alumnos_dict, columns=column_names)
+        except mysql.connector.Error as err:
+            print(f"Error en la base de datos: {err}")
+            flash(f"Error en la base de datos: {err}", 'error')
+            return redirect(url_for('iniciar_profesores'))
+        finally:
+            # Cierra la conexión a la base de datos
+            cursor.close()
+            conn.close()
+            print("Conexión a la base de datos cerrada")
+    return redirect(url_for('iniciar_profesores'))
+
+@app.route('/edit_record_tutorias/<table>/<record_id>', methods=['GET', 'POST'])
+def edit_record_tutorias(table, record_id):
+    if 'user_id' in session and session.get('user_role') == 'profesor':
+        if request.method == 'POST':
+            if 'save_changes' in request.form:
+                print(f"Iniciando el guardado de cambios para el registro {record_id} en la tabla {table}")
+                try:
+                    conn = mysql.connector.connect(**db_config)
+                    cursor = conn.cursor()
+                    print("Conexión a la base de datos establecida")
+                    
+                    for column, value in request.form.items():
+                        if column not in ['NoControl', 'save_changes', 'columns_to_clear']:
+                            print(f"Actualizando columna {column} con valor {value}")
+                            cursor.execute(f"UPDATE {table} SET `{column}` = %s WHERE NoControl = %s", (value, record_id))
+                    
+                    columns_to_clear = request.form.getlist('columns_to_clear')
+                    print(f"Columnas a limpiar: {columns_to_clear}")
+                    
+                    for column_name in columns_to_clear:
+                        cursor.execute(f"UPDATE {table} SET `{column_name}` = NULL WHERE NoControl = %s", (record_id,))
+                        print(f"Columna {column_name} limpiada")
+                        
+                        cursor.execute("SELECT ruta_archivo FROM rutas_pdf WHERE NoControl = %s AND Columna_ref = %s", (record_id, column_name))
+                        file_paths = cursor.fetchall()
+                        
+                        if not file_paths:
+                            print(f"No se encontraron rutas de archivos para NoControl={record_id} y Columna_ref={column_name}")
+                        else:
+                            print(f"Rutas de archivos encontradas para {column_name}: {file_paths}")
+                        
+                        for file_path in file_paths:
+                            file_path = file_path[0]
+                            if os.path.exists(file_path):
+                                print(f"Eliminando archivo: {file_path}")
+                                os.remove(file_path)
+                            else:
+                                print(f"Archivo no encontrado: {file_path}")
+                            cursor.execute("DELETE FROM rutas_pdf WHERE NoControl = %s AND Columna_ref = %s", (record_id, column_name))
+                            print(f"Registro eliminado en rutas_pdf para {column_name}")
+                        
+                        cursor.execute("SET @count = 0;")
+                        cursor.execute("UPDATE rutas_pdf SET ID = @count:= @count + 1;")
+                        cursor.execute("ALTER TABLE rutas_pdf AUTO_INCREMENT = 1;")
+                        print("IDs en rutas_pdf reordenados")
+                    
+                    conn.commit()
+                    print("Cambios guardados con éxito")
+                    flash('Cambios guardados con éxito', 'success')
+                except mysql.connector.Error as err:
+                    print(f"Error en la base de datos: {err}")
+                    flash(f"Error en la base de datos: {err}", 'error')
+                finally:
+                    cursor.close()
+                    conn.close()
+                    print("Conexión a la base de datos cerrada")
+                return redirect(url_for('profesores_tutorias'))
+            elif 'delete_record' in request.form:
+                print(f"Iniciando eliminación del registro {record_id} en la tabla {table}")
+                try:
+                    conn = mysql.connector.connect(**db_config)
+                    cursor = conn.cursor()
+                    print("Conexión a la base de datos establecida")
+                    
+                    cursor.execute("SELECT ruta_archivo FROM rutas_pdf WHERE NoControl = %s", (record_id,))
+                    file_paths = cursor.fetchall()
+                    print(f"Rutas de archivos encontradas: {file_paths}")
+                    
+                    for file_path in file_paths:
+                        file_path = file_path[0]
+                        if os.path.exists(file_path):
+                            print(f"Eliminando archivo: {file_path}")
+                            os.remove(file_path)
+                        else:
+                            print(f"Archivo no encontrado: {file_path}")
+                    
+                    cursor.execute("DELETE FROM rutas_pdf WHERE NoControl = %s", (record_id,))
+                    print(f"Registros eliminados en rutas_pdf para {record_id}")
+                    
+                    cursor.execute(f"DELETE FROM {table} WHERE NoControl = %s", (record_id,))
+                    print(f"Registros eliminados en {table} para {record_id}")
+                    
+                    cursor.execute("DELETE FROM alumnos WHERE NoControl = %s", (record_id,))
+                    print(f"Registros eliminados en alumnos para {record_id}")
+                    
+                    conn.commit()
+                    
+                    cursor.execute("SET @count = 0;")
+                    cursor.execute("UPDATE rutas_pdf SET ID = @count:= @count + 1;")
+                    cursor.execute("ALTER TABLE rutas_pdf AUTO_INCREMENT = 1;")
+                    print("IDs en rutas_pdf reordenados")
+                    
+                    flash('Registro y archivos eliminados con éxito', 'success')
+                except mysql.connector.Error as err:
+                    print(f"Error en la base de datos: {err}")
+                    flash(f"Error en la base de datos: {err}", 'error')
+                finally:
+                    cursor.close()
+                    conn.close()
+                    print("Conexión a la base de datos cerrada")
+                return redirect(url_for('profesores_tutorias'))
+            elif 'go_back' in request.form:
+                print("Regresando al dashboard de profesores")
+                return redirect(url_for('profesores_tutorias'))
+        else:
+            print(f"Cargando datos para el registro {record_id} en la tabla {table}")
+            try:
+                conn = mysql.connector.connect(**db_config)
+                cursor = conn.cursor(dictionary=True)
+                print("Conexión a la base de datos establecida")
+                cursor.execute(f"SELECT * FROM {table} WHERE NoControl = %s", (record_id,))
+                record = cursor.fetchone()
+                if record:
+                    print(f"Registro encontrado: {record}")
+                    return render_template('action_pages/editar_alumno_tutorias.html', record=record, table=table)
+                else:
+                    print(f"Registro {record_id} no encontrado")
+                    flash('Registro no encontrado', 'error')
+                    return redirect(url_for('profesores_tutorias'))
+            except mysql.connector.Error as err:
+                print(f"Error en la base de datos: {err}")
+                flash(f"Error en la base de datos: {err}", 'error')
+                return redirect(url_for('profesores_tutorias'))
+            finally:
+                cursor.close()
+                conn.close()
+                print("Conexión a la base de datos cerrada")
+    print("Redirigiendo al dashboard de profesores")
+    return redirect(url_for('profesores_tutorias'))
 
 
 # Metodo para manejar el cierre de sesion del usuario

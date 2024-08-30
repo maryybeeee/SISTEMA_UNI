@@ -1,0 +1,48 @@
+{% extends 'layout.html' %}
+{% block title %}Actualizar Alumno{% endblock %}
+{% block content %}
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/profesores_dashboard.css') }}">
+</head>
+<body>
+    <h2>Actualizar valor del Alumno</h2>
+    <div class="container">
+        <form action="{{ url_for('edit_record_tutorias', table=table, record_id=record['NoControl']) }}" method="post">
+            {% for column, value in record.items() %}
+                {% if column not in ['NoControl', 'Conteo'] %}
+                <div class="form-group">
+                    <label for="{{ column }}">{{ column }}:</label>
+                    {% if column in ['ApellidoP', 'ApellidoM', 'Nombres'] %}
+                    <input type="text" name="{{ column }}" id="{{ column }}" value="{{ value if value is not none else '' }}">
+                    {% elif column == 'Estado' %}
+                    <select name="Estado" id="Estado">
+                        <option value="NO LIBERADO" {{ value == 'NO LIBERADO' and 'selected' }}>NO LIBERADO</option>
+                        <option value="LIBERADO" {{ value == 'LIBERADO' and 'selected' }}>LIBERADO</option>
+                    </select>
+                    {% elif column == 'Atendidos' %}
+                    <select name="Atendidos" id="Atendidos">
+                        <option value="NO ATENDIDO" {{ value == 'NO ATENDIDO' and 'selected' }}>NO ATENDIDO</option>
+                        <option value="ATENDIDO" {{ value == 'ATENDIDO' and 'selected' }}>ATENDIDO</option>
+                    </select>
+                    {% else %}
+                    <div class="checkbox-wrapper">
+                        {% if value %}
+                            <a href="{{ url_for('uploaded_file', user_id=record['NoControl'], filename=value|basename) }}" target="_blank" class="view_pdf_button">Ver archivo PDF</a>
+                        {% endif %}
+                        <div class="direction">
+                            <input type="checkbox" id="large_checkbox_{{ column }}" name="columns_to_clear" value="{{ column }}" {% if not value %}disabled{% endif %}>
+                            <label for="large_checkbox_{{ column }}">Eliminar valor de esta celda</label>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            {% endfor %}
+            <button type="submit" name="save_changes">Guardar Cambios</button><br><br>
+            <button type="submit" name="go_back">Regresar</button><br><br>
+            <button type="submit" name="delete_record" onclick="return confirm('¿Estás seguro de que deseas eliminar este registro?')">Eliminar Alumno</button>
+        </form>           
+    </div>
+    <script src="{{ url_for('static', filename='js/layout.js') }}"></script>
+</body>
+{% endblock %}

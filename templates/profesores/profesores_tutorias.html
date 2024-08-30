@@ -1,5 +1,76 @@
 {% extends 'layout.html' %}
 {% block title %}Tutorias{% endblock %}
 {% block content %}
-
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/profesores_dashboard.css') }}">
+    <script>
+        function confirmarEliminacion() {
+            return confirm("¿Estás seguro de que deseas eliminar este registro?");
+        }
+    </script>    
+</head>
+<body>
+    <h2>Tutorías</h2>
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+        <form method="post">
+            <div class="form-group">
+                <input type="text" id="number_control" name="number_control" placeholder="Buscar alumno por número de control">
+            </div>
+            <div class="button-container">
+                <button type="submit" name="search_student">Buscar alumno</button>
+                <button type="submit" name="search_cancel">Cancelar búsqueda</button>
+            </div><br>
+            <div class="form-group">
+                <input type="text" id="column_name" name="column_name" placeholder="Agrega/Elimina una columna">
+            </div>
+            <div class="button-container">
+                <button type="submit" name="add_column">Agregar Columna</button>
+                <button type="submit" name="remove_column">Eliminar Columna</button>
+            </div>
+        </form>
+    </div>
+    <div class="scroll-container">
+        <table class="table table-bordered table-striped">
+            <thead class="thead-light">
+                <tr>
+                    {% for column in columns %}
+                        <th>{{ column }}</th>
+                    {% endfor %}
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in alumnos %}
+                <tr>
+                    {% for column in columns %}
+                    <td>
+                        {% if columns.index(column) > columns.index('Nombres') and columns.index(column) < columns.index('Conteo') %}
+                            {% if row[column] is none or row[column] == '' %}
+                                <i class="fas fa-times"></i>
+                            {% else %}
+                                <i class="fas fa-check"></i>
+                            {% endif %}
+                        {% else %}
+                            {{ row[column] if column in row else '' }}
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                    <td>
+                        <a href="{{ url_for('edit_record_tutorias', table='tutorias', record_id=row['NoControl']) }}">Editar</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
 {% endblock %}

@@ -6,7 +6,7 @@ db_config = {
     'user': 'root',
     'password': 'MiguelWorkbench009',
     'host': 'localhost',
-    'database': 'bd',
+    'database': 'op',
     'port': 3306
 }
 
