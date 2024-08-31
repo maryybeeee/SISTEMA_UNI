@@ -883,7 +883,7 @@ def edit_record_tutorias( record_id):
                         cursor.execute(f"UPDATE tutorias SET `{column_name}` = NULL WHERE NoControl = %s", (record_id,))
                         print(f"Columna {column_name} limpiada")
                         # Obtener las rutas de archivo asociadas al 'record_id' y 'column_name'
-                        cursor.execute("SELECT ruta_archivo FROM rutas_pdf WHERE NoControl = %s AND Columna_ref = %s", (record_id, column_name))
+                        cursor.execute("SELECT ruta_archivo FROM rutas_pdf_tutorias WHERE NoControl = %s AND Columna_ref = %s", (record_id, column_name))
                         file_paths = cursor.fetchall()
                         # Verificación adicional para asegurarse de que se encontraron rutas de archivos
                         if not file_paths:
@@ -900,12 +900,12 @@ def edit_record_tutorias( record_id):
                             else:
                                 print(f"Archivo no encontrado: {file_path}")
                             # Elimina el registro correspondiente en la tabla 'rutas_pdf_tutorias'
-                            cursor.execute("DELETE FROM rutas_pdf WHERE NoControl = %s AND Columna_ref = %s", (record_id, column_name))
-                            print(f"Registro eliminado en rutas_pdf para {column_name}")
+                            cursor.execute("DELETE FROM rutas_pdf_tutorias WHERE NoControl = %s AND Columna_ref = %s", (record_id, column_name))
+                            print(f"Registro eliminado en rutas_pdf_tutorias para {column_name}")
                         cursor.execute("SET @count = 0;")
-                        cursor.execute("UPDATE rutas_pdf SET ID = @count:= @count + 1;")
-                        cursor.execute("ALTER TABLE rutas_pdf AUTO_INCREMENT = 1;")
-                        print("IDs en rutas_pdf reordenados")
+                        cursor.execute("UPDATE rutas_pdf_tutorias SET ID = @count:= @count + 1;")
+                        cursor.execute("ALTER TABLE rutas_pdf_tutorias AUTO_INCREMENT = 1;")
+                        print("IDs en rutas_pdf_tutorias reordenados")
                     conn.commit()
                     print("Cambios guardados con éxito")
                     flash('Cambios guardados con éxito', 'success')
@@ -939,17 +939,17 @@ def edit_record_tutorias( record_id):
                         else:
                             print(f"Archivo no encontrado: {file_path}")
                     # Eliminar registros de rutas_pdf_tutorias, tutorias y alumnos
-                    cursor.execute("DELETE FROM rutas_pdf WHERE NoControl = %s", (record_id,))
-                    print(f"Registros eliminados en rutas_pdf para {record_id}")
+                    cursor.execute("DELETE FROM rutas_pdf_tutorias WHERE NoControl = %s", (record_id,))
+                    print(f"Registros eliminados en rutas_pdf_tutorias para {record_id}")
                     cursor.execute(f"DELETE FROM tutorias WHERE NoControl = %s", (record_id,))
                     print(f"Registros eliminados en tutorias para {record_id}")
                     cursor.execute("DELETE FROM alumnos WHERE NoControl = %s", (record_id,))
                     print(f"Registros eliminados en alumnos para {record_id}")
                     conn.commit()
                     cursor.execute("SET @count = 0;")
-                    cursor.execute("UPDATE rutas_pdf SET ID = @count:= @count + 1;")
-                    cursor.execute("ALTER TABLE rutas_pdf AUTO_INCREMENT = 1;")
-                    print("IDs en rutas_pdf reordenados")
+                    cursor.execute("UPDATE rutas_pdf_tutorias SET ID = @count:= @count + 1;")
+                    cursor.execute("ALTER TABLE rutas_pdf_tutorias AUTO_INCREMENT = 1;")
+                    print("IDs en rutas_pdf_tutorias reordenados")
                     flash('Registro y archivos eliminados con éxito', 'success')
                 except mysql.connector.Error as err:
                     print(f"Error en la base de datos: {err}")
