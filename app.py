@@ -129,8 +129,9 @@ def alumnos_jornadas():
                         return redirect(url_for('alumnos_jornadas'))
                     # Regresar el cursor al inicio después de leer el archivo para verificar el tamaño
                     file.seek(0)
+                    tipo_carpeta = 'jornadas_academicas'
                     # Resto del código para guardar el archivo
-                    upload_folder = os.path.join(app.config['UPLOAD_FOLDER'], str(control_number))
+                    upload_folder = os.path.join(app.config['UPLOAD_FOLDER'], str(control_number), tipo_carpeta)
                     # Si la carpeta no existe, la crea
                     if not os.path.exists(upload_folder):
                         os.makedirs(upload_folder)
