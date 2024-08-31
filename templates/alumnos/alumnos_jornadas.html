@@ -42,7 +42,7 @@
                                         {{ item[col] }}
                                     {% else %}
                                         {% if item[col] %}
-                                            <a href="{{ url_for('static', filename='uploads/' ~ session['user_id'] ~ '/' ~ item[col]) }}" target="_blank" class="view-pdf-button">Ver PDF</a>
+                                            <a href="{{ url_for('static', filename='uploads/' ~ session['user_id'] ~ '/' ~ 'jornadas_academicas' ~ '/' ~ item[col]) }}" target="_blank" class="view-pdf-button">Ver PDF</a>
                                             <br>
                                         {% endif %}
                                         <input type="file" name="file" accept=".pdf" class="file-input" id="file-input-{{ loop.index }}-{{ col }}" />

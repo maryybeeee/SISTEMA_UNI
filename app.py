@@ -63,34 +63,25 @@ def registro_alumnos():
             cursor = conn.cursor()
             print("Conexión a la base de datos establecida")
             # Verifica si el numero de control ya existe en jornadas_academicas
-            cursor.execute("SELECT * FROM jornadas_academicas WHERE NoControl = %s", (control_number,))
+            cursor.execute("SELECT * FROM jornadas_academicas WHERE  ApellidoP = %s AND ApellidoM = %s AND Nombres = %s AND NoControl = %s", (last_name1, last_name2, names, control_number,))
             jornada_academica = cursor.fetchone()
             # Verifica si el numero de control ya existe en tutorias
-            cursor.execute("SELECT * FROM tutorias WHERE NoControl = %s", (control_number,))
+            cursor.execute("SELECT * FROM tutorias WHERE ApellidoP = %s AND ApellidoM = %s AND Nombres = %s AND NoControl = %s", (last_name1, last_name2, names, control_number,))
             tutoria = cursor.fetchone()
             if jornada_academica or tutoria:
                 # Verifica si el alumno ya esta registrado en la tabla alumnos
-                cursor.execute("SELECT * FROM alumnos WHERE NoControl = %s", (control_number,))
+                cursor.execute("SELECT * FROM alumnos WHERE ApellidoP = %s AND ApellidoM = %s AND Nombres = %s AND NoControl = %s", (last_name1, last_name2, names, control_number,))
                 user = cursor.fetchone()
                 if user:
-                    flash('Número de control ya registrado', 'error')
+                    flash('Usuario ya registrado', 'error')
                 else:
-                    # Determina la tabla de referencia
-                    tabla_referencia = []
-                    if jornada_academica:
-                        tabla_referencia.append('jornadas_academicas')
-                    if tutoria:
-                        tabla_referencia.append('tutorias')
-                    # Convierte la lista en una cadena separada por comas
-                    tabla_ref_str = ', '.join(tabla_referencia)
-
                     # Inserta un nuevo registro en la tabla alumnos
-                    cursor.execute("INSERT INTO alumnos (Nombres, ApellidoP, ApellidoM, Contraseña, Tabla_ref, NoControl) VALUES (%s, %s, %s, %s, %s, %s)",(names, last_name1, last_name2, password, tabla_ref_str, control_number))
+                    cursor.execute("INSERT INTO alumnos (Nombres, ApellidoP, ApellidoM, Contraseña, NoControl) VALUES (%s, %s, %s, %s, %s)",(names, last_name1, last_name2, password, control_number))
                     conn.commit()
                     print(f"Alumno registrado: {control_number}")
                     return redirect(url_for('login_alumnos'))
             else:
-                flash('Número de control no encontrado en jornadas académicas ni en tutorías', 'error')
+                flash('Usuario no encontrado en la base de datos', 'error')
         except mysql.connector.Error as err:
             print(f"Error en la base de datos: {err}")
             flash(f"Error en la base de datos: {err}", 'error')
@@ -139,8 +130,7 @@ def alumnos_jornadas():
                     # Regresar el cursor al inicio después de leer el archivo para verificar el tamaño
                     file.seek(0)
                     # Resto del código para guardar el archivo
-                    tipo_carpeta = 'jornadas_academicas'
-                    upload_folder = os.path.join(app.config['UPLOAD_FOLDER'], str(control_number), tipo_carpeta)
+                    upload_folder = os.path.join(app.config['UPLOAD_FOLDER'], str(control_number))
                     # Si la carpeta no existe, la crea
                     if not os.path.exists(upload_folder):
                         os.makedirs(upload_folder)
@@ -151,7 +141,6 @@ def alumnos_jornadas():
                     save_path = os.path.join(upload_folder, filename)
                     print(f"Ruta para guardar el archivo: {save_path}")
                     try:
-                        # Conecta a la base de datos
                         conn = mysql.connector.connect(**db_config)
                         cursor = conn.cursor()
                         print("Conexión a la base de datos establecida")
@@ -189,12 +178,10 @@ def alumnos_jornadas():
                         print(f"Error en la base de datos: {err}")
                         flash(f"Error en la base de datos: {err}", 'error')
                     finally:
-                        # Cierra la conexion a la base de datos
                         cursor.close()
                         conn.close()
                         print("Conexión a la base de datos cerrada")
         try:
-            # Conecta a la base de datos
             conn = mysql.connector.connect(**db_config)
             cursor = conn.cursor()
             print("Conexión a la base de datos establecida")
@@ -214,7 +201,6 @@ def alumnos_jornadas():
             flash(f"Error en la base de datos: {err}", 'error')
             return redirect(url_for('iniciar_alumnos'))
         finally:
-            # Cierra la conexion a la base de datos
             cursor.close()
             conn.close()
             print("Conexión a la base de datos cerrada")
@@ -234,12 +220,11 @@ def iniciar_alumnos():
         password = request.form.get('password')
         print(f"Intento de inicio de sesión para número de control: {control_number}")
         try:
-            # Conecta a la base de datos
             conn = mysql.connector.connect(**db_config)
             cursor = conn.cursor()
             print("Conexión a la base de datos establecida")
             # Busca al usuario en la base de datos
-            cursor.execute("SELECT NoControl, Nombres, ApellidoP, ApellidoM, Contraseña, Tabla_ref FROM alumnos WHERE NoControl = %s", (control_number,))
+            cursor.execute("SELECT NoControl, Nombres, ApellidoP, ApellidoM, Contraseña FROM alumnos WHERE NoControl = %s", (control_number,))
             user = cursor.fetchone()
             # Verifica si el usuario existe y la contraseña es correcta
             if user and bcrypt.checkpw(password.encode('utf-8'), user[4].encode('utf-8')):
@@ -350,7 +335,6 @@ def iniciar_profesores():
         key = request.form.get('key')
         print(f"Intento de inicio de sesión para número de trabajador: {worker_number}")
         try:
-            # Conecta a la base de datos
             conn = mysql.connector.connect(**db_config)
             cursor = conn.cursor()
             print("Conexión a la base de datos establecida")
@@ -375,7 +359,6 @@ def iniciar_profesores():
             print(f"Error en la base de datos: {err}")
             flash(f"Error en la base de datos: {err}", 'error')
         finally:
-            # Cierra la conexion a la base de datos
             cursor.close()
             conn.close()
             print("Conexión a la base de datos cerrada")
@@ -393,7 +376,6 @@ def profesores_jornadas():
                 if column_name:
                     print(f"Intentando agregar columna: {column_name}")
                     try:
-                        # Conecta a la base de datos
                         conn = mysql.connector.connect(**db_config)
                         cursor = conn.cursor()
                         print("Conexión a la base de datos establecida")
@@ -414,7 +396,6 @@ def profesores_jornadas():
                         print(f"Error en la base de datos: {err}")
                         flash(f"Error en la base de datos: {err}", 'error')
                     finally:
-                        # Cierra la conexion a la base de datos
                         cursor.close()
                         conn.close()
                         print("Conexión a la base de datos cerrada")
@@ -424,7 +405,6 @@ def profesores_jornadas():
                 if column_name:
                     print(f"Intentando eliminar columna: {column_name}")
                     try:
-                        # Conecta a la base de datos
                         conn = mysql.connector.connect(**db_config)
                         cursor = conn.cursor()
                         print("Conexión a la base de datos establecida")
@@ -449,7 +429,6 @@ def profesores_jornadas():
                         # Eliminar registros de rutas_pdf_jornadas, jornadas_academicas y alumnos
                         cursor.execute("DELETE FROM rutas_pdf_jornadas WHERE Columna_ref = %s", (column_name,))
                         print(f"Registros eliminados en rutas_pdf_jornadas para {column_name}")
-                        # Reordenar los IDs en rutas_pdf_jornadas para que sean consecutivos
                         cursor.execute("SET @count = 0;")
                         cursor.execute("UPDATE rutas_pdf_jornadas SET ID = @count:= @count + 1;")
                         cursor.execute("ALTER TABLE rutas_pdf_jornadas AUTO_INCREMENT = 1;")
@@ -466,14 +445,12 @@ def profesores_jornadas():
                         flash(f"Error al eliminar archivos: {e}", 'error')
                         print(f"Error al eliminar archivos: {e}")
                     finally:
-                        # Cierra la conexion a la base de datos
                         cursor.close()
                         conn.close()
                         print("Conexión a la base de datos cerrada")
             elif 'search_student' in request.form:
                 number_control = request.form['number_control']
                 try:
-                    # Conecta a la base de datos
                     conn = mysql.connector.connect(**db_config)
                     cursor = conn.cursor()
                     print("Conexión a la base de datos establecida")
@@ -513,14 +490,12 @@ def profesores_jornadas():
                     print(f"Error en la base de datos: {err}")
                     flash(f"Error en la base de datos: {err}", 'error')
                 finally:
-                    # Cierra la conexion a la base de datos
                     cursor.close()
                     conn.close()
                     print("Conexión a la base de datos cerrada")
             elif 'search_cancel' in request.form:
                 return redirect(url_for('profesores_jornadas'))
         try:
-            # Conecta a la base de datos
             conn = mysql.connector.connect(**db_config)
             cursor = conn.cursor()
             print("Conexión a la base de datos establecida")
@@ -561,23 +536,20 @@ def profesores_jornadas():
             flash(f"Error en la base de datos: {err}", 'error')
             return redirect(url_for('iniciar_profesores'))
         finally:
-            # Cierra la conexion a la base de datos
             cursor.close()
             conn.close()
             print("Conexión a la base de datos cerrada")
     return redirect(url_for('iniciar_profesores'))
 
 # Ruta para editar un registro de alumno
-@app.route('/edit_record_jornadas/<int:record_id>', methods=['GET', 'POST'])
+@app.route('/edit_record_jornadas/<record_id>', methods=['GET', 'POST'])
 def edit_record_jornadas(record_id):
-    # Verifica si el usuario esta autenticado y es un profesor
     if 'user_id' in session and session.get('user_role') == 'profesor':
         if request.method == 'POST':
             # Manejo de guardar cambios
             if 'save_changes' in request.form:
                 print(f"Iniciando el guardado de cambios para el registro {record_id}")
                 try:
-                    # Conecta a la base de datos
                     conn = mysql.connector.connect(**db_config)
                     cursor = conn.cursor()
                     print("Conexión a la base de datos establecida")
@@ -617,7 +589,6 @@ def edit_record_jornadas(record_id):
                             # Elimina el registro correspondiente en la tabla 'rutas_pdf_jornadas'
                             cursor.execute("DELETE FROM rutas_pdf_jornadas WHERE NoControl = %s AND Columna_ref = %s", (record_id, column_name))
                             print(f"Registro eliminado en rutas_pdf_jornadas para {column_name}")
-                        # Reordena los IDs en rutas_pdf_jornadas para que sean consecutivos
                         cursor.execute("SET @count = 0;")
                         cursor.execute("UPDATE rutas_pdf_jornadas SET ID = @count:= @count + 1;")
                         cursor.execute("ALTER TABLE rutas_pdf_jornadas AUTO_INCREMENT = 1;")
@@ -629,7 +600,6 @@ def edit_record_jornadas(record_id):
                     print(f"Error en la base de datos: {err}")
                     flash(f"Error en la base de datos: {err}", 'error')
                 finally:
-                    # Cierra la conexion a la base de datos
                     cursor.close()
                     conn.close()
                     print("Conexión a la base de datos cerrada")
@@ -638,7 +608,6 @@ def edit_record_jornadas(record_id):
             elif 'delete_record' in request.form:
                 print(f"Iniciando eliminación del registro {record_id}")
                 try:
-                    # Conecta a la base de datos
                     conn = mysql.connector.connect(**db_config)
                     cursor = conn.cursor()
                     print("Conexión a la base de datos establecida")
@@ -655,7 +624,7 @@ def edit_record_jornadas(record_id):
                             os.remove(file_path)
                         else:
                             print(f"Archivo no encontrado: {file_path}")
-                    # Eliminar registros de rutas_pdf, jornadas_academicas y alumnos
+                    # Eliminar registros de rutas_pdf_jornadas, jornadas_academicas y alumnos
                     cursor.execute("DELETE FROM rutas_pdf_jornadas WHERE NoControl = %s", (record_id,))
                     print(f"Registros eliminados en rutas_pdf_jornadas para {record_id}")
                     cursor.execute("DELETE FROM jornadas_academicas WHERE NoControl = %s", (record_id,))
@@ -663,7 +632,6 @@ def edit_record_jornadas(record_id):
                     cursor.execute("DELETE FROM alumnos WHERE NoControl = %s", (record_id,))
                     print(f"Registros eliminados en alumnos para {record_id}")
                     conn.commit()
-                    # Reordenar los IDs en rutas_pdf para que sean consecutivos
                     cursor.execute("SET @count = 0;")
                     cursor.execute("UPDATE rutas_pdf_jornadas SET ID = @count:= @count + 1;")
                     cursor.execute("ALTER TABLE rutas_pdf_jornadas AUTO_INCREMENT = 1;")
@@ -673,7 +641,6 @@ def edit_record_jornadas(record_id):
                     print(f"Error en la base de datos: {err}")
                     flash(f"Error en la base de datos: {err}", 'error')
                 finally:
-                    # Cierra la conexion a la base de datos
                     cursor.close()
                     conn.close()
                     print("Conexión a la base de datos cerrada")
@@ -686,7 +653,6 @@ def edit_record_jornadas(record_id):
         else:
             print(f"Cargando datos para el registro {record_id}")
             try:
-                # Conecta a la base de datos
                 conn = mysql.connector.connect(**db_config)
                 cursor = conn.cursor(dictionary=True)
                 print("Conexión a la base de datos establecida")
@@ -704,7 +670,6 @@ def edit_record_jornadas(record_id):
                 flash(f"Error en la base de datos: {err}", 'error')
                 return redirect(url_for('profesores_jornadas'))
             finally:
-                # Cierra la conexion a la base de datos
                 cursor.close()
                 conn.close()
                 print("Conexión a la base de datos cerrada")
@@ -714,7 +679,6 @@ def edit_record_jornadas(record_id):
 
 @app.route('/profesores_tutorias', methods=['POST', 'GET'])
 def profesores_tutorias():
-    # Verifica si el usuario está autenticado y es un profesor
     if 'user_id' in session and session.get('user_role') == 'profesor':
         if request.method == 'POST':
             # Manejo de la adición de columnas
@@ -723,7 +687,6 @@ def profesores_tutorias():
                 if column_name:
                     print(f"Intentando agregar columna: {column_name}")
                     try:
-                        # Conecta a la base de datos
                         conn = mysql.connector.connect(**db_config)
                         cursor = conn.cursor()
                         print("Conexión a la base de datos establecida")
@@ -744,7 +707,6 @@ def profesores_tutorias():
                         print(f"Error en la base de datos: {err}")
                         flash(f"Error en la base de datos: {err}", 'error')
                     finally:
-                        # Cierra la conexión a la base de datos
                         cursor.close()
                         conn.close()
                         print("Conexión a la base de datos cerrada")
@@ -754,7 +716,6 @@ def profesores_tutorias():
                 if column_name:
                     print(f"Intentando eliminar columna: {column_name}")
                     try:
-                        # Conecta a la base de datos
                         conn = mysql.connector.connect(**db_config)
                         cursor = conn.cursor()
                         print("Conexión a la base de datos establecida")
@@ -796,14 +757,12 @@ def profesores_tutorias():
                         flash(f"Error al eliminar archivos: {e}", 'error')
                         print(f"Error al eliminar archivos: {e}")
                     finally:
-                        # Cierra la conexión a la base de datos
                         cursor.close()
                         conn.close()
                         print("Conexión a la base de datos cerrada")
             elif 'search_student' in request.form:
                 number_control = request.form['number_control']
                 try:
-                    # Conecta a la base de datos
                     conn = mysql.connector.connect(**db_config)
                     cursor = conn.cursor()
                     print("Conexión a la base de datos establecida")
@@ -843,14 +802,12 @@ def profesores_tutorias():
                     print(f"Error en la base de datos: {err}")
                     flash(f"Error en la base de datos: {err}", 'error')
                 finally:
-                    # Cierra la conexión a la base de datos
                     cursor.close()
                     conn.close()
                     print("Conexión a la base de datos cerrada")
             elif 'search_cancel' in request.form:
                 return redirect(url_for('profesores_tutorias'))
         try:
-            # Conecta a la base de datos
             conn = mysql.connector.connect(**db_config)
             cursor = conn.cursor()
             print("Conexión a la base de datos establecida")
@@ -891,58 +848,64 @@ def profesores_tutorias():
             flash(f"Error en la base de datos: {err}", 'error')
             return redirect(url_for('iniciar_profesores'))
         finally:
-            # Cierra la conexión a la base de datos
             cursor.close()
             conn.close()
             print("Conexión a la base de datos cerrada")
     return redirect(url_for('iniciar_profesores'))
 
-@app.route('/edit_record_tutorias/<table>/<record_id>', methods=['GET', 'POST'])
-def edit_record_tutorias(table, record_id):
+# Ruta para editar un registro de alumno 
+@app.route('/edit_record_tutorias/<record_id>', methods=['GET', 'POST'])
+def edit_record_tutorias( record_id):
     if 'user_id' in session and session.get('user_role') == 'profesor':
         if request.method == 'POST':
+            # Manejo de guardar cambios
             if 'save_changes' in request.form:
-                print(f"Iniciando el guardado de cambios para el registro {record_id} en la tabla {table}")
+                print(f"Iniciando el guardado de cambios para el registro {record_id} en la tabla tutorias")
                 try:
+                    # Conecta a la base de datos
                     conn = mysql.connector.connect(**db_config)
                     cursor = conn.cursor()
                     print("Conexión a la base de datos establecida")
-                    
+                    # Recorre todos los elementos del formulario
                     for column, value in request.form.items():
+                        # Verifica que la columna no sea una de las excluidas
                         if column not in ['NoControl', 'save_changes', 'columns_to_clear']:
+                            # Imprime el nombre de la columna y el valor que se va a actualizar
                             print(f"Actualizando columna {column} con valor {value}")
-                            cursor.execute(f"UPDATE {table} SET `{column}` = %s WHERE NoControl = %s", (value, record_id))
-                    
+                            cursor.execute(f"UPDATE tutorias SET `{column}` = %s WHERE NoControl = %s", (value, record_id))
+                    # Obtiene la lista de columnas que deben ser limpiadas (establecidas a NULL)
                     columns_to_clear = request.form.getlist('columns_to_clear')
+                    # Imprime las columnas que se van a limpiar
                     print(f"Columnas a limpiar: {columns_to_clear}")
-                    
+                    # Recorre las columnas que deben ser limpiadas
                     for column_name in columns_to_clear:
-                        cursor.execute(f"UPDATE {table} SET `{column_name}` = NULL WHERE NoControl = %s", (record_id,))
+                        # Establece el valor de la columna a NULL para el registro especificado
+                        cursor.execute(f"UPDATE tutorias SET `{column_name}` = NULL WHERE NoControl = %s", (record_id,))
                         print(f"Columna {column_name} limpiada")
-                        
+                        # Obtener las rutas de archivo asociadas al 'record_id' y 'column_name'
                         cursor.execute("SELECT ruta_archivo FROM rutas_pdf WHERE NoControl = %s AND Columna_ref = %s", (record_id, column_name))
                         file_paths = cursor.fetchall()
-                        
+                        # Verificación adicional para asegurarse de que se encontraron rutas de archivos
                         if not file_paths:
                             print(f"No se encontraron rutas de archivos para NoControl={record_id} y Columna_ref={column_name}")
                         else:
                             print(f"Rutas de archivos encontradas para {column_name}: {file_paths}")
-                        
+                        # Recorre cada ruta de archivo obtenida
                         for file_path in file_paths:
                             file_path = file_path[0]
+                            # Verifica si el archivo existe en el sistema
                             if os.path.exists(file_path):
                                 print(f"Eliminando archivo: {file_path}")
                                 os.remove(file_path)
                             else:
                                 print(f"Archivo no encontrado: {file_path}")
+                            # Elimina el registro correspondiente en la tabla 'rutas_pdf_tutorias'
                             cursor.execute("DELETE FROM rutas_pdf WHERE NoControl = %s AND Columna_ref = %s", (record_id, column_name))
                             print(f"Registro eliminado en rutas_pdf para {column_name}")
-                        
                         cursor.execute("SET @count = 0;")
                         cursor.execute("UPDATE rutas_pdf SET ID = @count:= @count + 1;")
                         cursor.execute("ALTER TABLE rutas_pdf AUTO_INCREMENT = 1;")
                         print("IDs en rutas_pdf reordenados")
-                    
                     conn.commit()
                     print("Cambios guardados con éxito")
                     flash('Cambios guardados con éxito', 'success')
@@ -954,41 +917,39 @@ def edit_record_tutorias(table, record_id):
                     conn.close()
                     print("Conexión a la base de datos cerrada")
                 return redirect(url_for('profesores_tutorias'))
+            # Manejo de eliminación de registros
             elif 'delete_record' in request.form:
-                print(f"Iniciando eliminación del registro {record_id} en la tabla {table}")
+                print(f"Iniciando eliminación del registro {record_id} en la tabla tutorias")
                 try:
+                    # Conecta a la base de datos
                     conn = mysql.connector.connect(**db_config)
                     cursor = conn.cursor()
                     print("Conexión a la base de datos establecida")
-                    
-                    cursor.execute("SELECT ruta_archivo FROM rutas_pdf WHERE NoControl = %s", (record_id,))
+                    # Eliminar archivos asociados al registro
+                    cursor.execute("SELECT ruta_archivo FROM rutas_pdf_tutorias WHERE NoControl = %s", (record_id,))
                     file_paths = cursor.fetchall()
                     print(f"Rutas de archivos encontradas: {file_paths}")
-                    
+                    # Recorre cada ruta de archivo obtenida
                     for file_path in file_paths:
                         file_path = file_path[0]
+                        # Verifica si el archivo existe en el sistema
                         if os.path.exists(file_path):
                             print(f"Eliminando archivo: {file_path}")
                             os.remove(file_path)
                         else:
                             print(f"Archivo no encontrado: {file_path}")
-                    
+                    # Eliminar registros de rutas_pdf_tutorias, tutorias y alumnos
                     cursor.execute("DELETE FROM rutas_pdf WHERE NoControl = %s", (record_id,))
                     print(f"Registros eliminados en rutas_pdf para {record_id}")
-                    
-                    cursor.execute(f"DELETE FROM {table} WHERE NoControl = %s", (record_id,))
-                    print(f"Registros eliminados en {table} para {record_id}")
-                    
+                    cursor.execute(f"DELETE FROM tutorias WHERE NoControl = %s", (record_id,))
+                    print(f"Registros eliminados en tutorias para {record_id}")
                     cursor.execute("DELETE FROM alumnos WHERE NoControl = %s", (record_id,))
                     print(f"Registros eliminados en alumnos para {record_id}")
-                    
                     conn.commit()
-                    
                     cursor.execute("SET @count = 0;")
                     cursor.execute("UPDATE rutas_pdf SET ID = @count:= @count + 1;")
                     cursor.execute("ALTER TABLE rutas_pdf AUTO_INCREMENT = 1;")
                     print("IDs en rutas_pdf reordenados")
-                    
                     flash('Registro y archivos eliminados con éxito', 'success')
                 except mysql.connector.Error as err:
                     print(f"Error en la base de datos: {err}")
@@ -998,20 +959,22 @@ def edit_record_tutorias(table, record_id):
                     conn.close()
                     print("Conexión a la base de datos cerrada")
                 return redirect(url_for('profesores_tutorias'))
+            # Manejo de la acción de volver al dashboard
             elif 'go_back' in request.form:
                 print("Regresando al dashboard de profesores")
                 return redirect(url_for('profesores_tutorias'))
+        # Manejo de la solicitud GET para cargar el registro
         else:
-            print(f"Cargando datos para el registro {record_id} en la tabla {table}")
+            print(f"Cargando datos para el registro {record_id} en la tabla tutorias")
             try:
                 conn = mysql.connector.connect(**db_config)
                 cursor = conn.cursor(dictionary=True)
                 print("Conexión a la base de datos establecida")
-                cursor.execute(f"SELECT * FROM {table} WHERE NoControl = %s", (record_id,))
+                cursor.execute(f"SELECT * FROM tutorias WHERE NoControl = %s", (record_id,))
                 record = cursor.fetchone()
                 if record:
                     print(f"Registro encontrado: {record}")
-                    return render_template('action_pages/editar_alumno_tutorias.html', record=record, table=table)
+                    return render_template('action_pages/editar_alumno_tutorias.html', record=record)
                 else:
                     print(f"Registro {record_id} no encontrado")
                     flash('Registro no encontrado', 'error')
@@ -1024,7 +987,8 @@ def edit_record_tutorias(table, record_id):
                 cursor.close()
                 conn.close()
                 print("Conexión a la base de datos cerrada")
-    print("Redirigiendo al dashboard de profesores")
+    # Redirige al dashboard de alumnos si el usuario no esta autenticado o no es alumno
+    print("Redirigiendo al dashboard de alumnos")
     return redirect(url_for('profesores_tutorias'))
 
 
