@@ -13,21 +13,6 @@
     padding-left: 20px;
 }
 
-.sections {
-    margin-top: 30px;
-}
-
-.sections h3 {
-    color: #033a6a;
-    font-size: 1.5em;
-    margin-bottom: 10px;
-}
-
-.sections p {
-    color: #555;
-    margin-bottom: 15px;
-}
-
 .sections button {
     background-color: #033a6a;
     color: #fff;
@@ -57,47 +42,16 @@
     border-radius: 15px;
 }
 
-.intro {
-    color: #666;
-    line-height: 1.6;
-    margin-bottom: 20px;
+
+.container p,ul{
+    font-size: 19px;
 }
 
-.intro p, .intro ul {
-    margin: 10px 0;
+.container li{
+    margin: 10px;
 }
 
-.intro ul {
-    list-style-type: disc;
-    padding-left: 20px;
+.icon {
+    font-size: 20px;
 }
 
-.sections {
-    margin-top: 30px;
-}
-
-.sections h3 {
-    color: #033a6a;
-    font-size: 1.5em;
-    margin-bottom: 10px;
-}
-
-.sections p {
-    color: #555;
-    margin-bottom: 15px;
-}
-
-.sections button {
-    background-color: #033a6a;
-    color: #fff;
-    padding: 15px 30px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    margin-bottom: 20px;
-}
-
-.sections button:hover {
-    background-color: #0056b3;
-}

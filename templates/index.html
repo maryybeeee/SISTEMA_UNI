@@ -1,7 +1,12 @@
 {% extends 'layout.html' %}   
 {% block title %}Página Principal{% endblock %}
 {% block content %}
-<h2 class="title">Bienvenido al Sistema de Gestión de Jornadas y Tutorías</h2>
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+
+</head>
+<body>
+    <h2 class="title">Bienvenido al Sistema de Gestión de Jornadas y Tutorías</h2>
 <div class="container">
     <div class="container">
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -13,24 +18,50 @@
                 </ul>
             {% endif %}
         {% endwith %}
+        {% if 'user_id' is not in session %}
         <p>Este sistema te permitirá gestionar tus jornadas académicas y tutorías de manera eficiente.</p>
         <p>Para comenzar, sigue las siguientes instrucciones:</p>
         <ul>
-            <li>Si eres alumno, primero debes registrarte con tus datos, incluyendo tu número de control y una contraseña.</li>
-            <li>Una vez registrado, podrás acceder a tus jornadas y tutorías.</li>
-            <li>Si eres profesor, inicia sesión para acceder a los datos de todos los alumnos.</li>
+            <li><span>Abre el panel de acciones.  <i class="fas fa-user-circle icon"></i></span></li>
+            <li><span>Si eres un alumno y no estas registrado presiona el apartado de "Registrate como alumno".</span></li>
+            <li><span>Una vez registrado, presiona el apartado de "Iniciar sesion como alumno" y asi acceder a tus tutorías y jornadas academicas.</span></li>
+            <li><span>En el apartado de "Iniciar sesion como profesor" tu profesor podra iniciar sesion y revisar que archivos tienes subidos en tus respectivas actividades.</span></li>
         </ul>
+        {% endif %}
     </div>
     {% if session.get('user_role') == 'alumno' %}
-    <div class="sections">
-        <h3 class="section-title">Mis Tutorías</h3>
-        <p>Aquí podrás ver y gestionar tus tutorías.</p>
-        <a href="{{url_for('alumnos_tutorias')}}" class="button">Acceder a Mis Tutorias</a>
-
-        <h3 class="section-title">Mis Jornadas</h3>
-        <p>Aquí podrás ver y gestionar tus jornadas académicas.</p>
-        <a href="{{url_for('alumnos_jornadas')}}" class="button">Acceder a Mis Jornadas</a>
-    </div>
+    <p>Bienvenido y esperamos que te guste la experiencia en este sistema</p>
+    <p>La sesion del alumno puede hacer diversas acciones:</p>
+    <ul>
+        <li>Podra acceder a las tablas de "Jornadas academicas" y "Tutorias" en sus respectivos apartados. <i class="fa-regular fa-calendar icon"></i> <i class="fa-solid fa-book menu icon"></i></li>
+        <li>Al acceder a una de las dos tablas podra realizar las mismas tareas.</li>
+        <li>Podra subir archivos con formato de PDF exclusivamente y con un maximo de 100kb al sobrepasar dicho limite se mostrara una advertencia.</li>
+        <li>El boton de "Subir PDF" se mostrara cuando el alumno no tenga una actividad subida y al presionarlo podra seleccionar y subir su actividad.</li>
+        <li>El boton de "Ver PDF" como su nombre indica podra ver el pdf que se a subido y dicho boton aparecera despues de que el alumno alla subido alguna actividad.</li>
+        <li>El boton de "Reemplazar PDF" aparecera despues de subir alguna actividad y su funcion es reemplazar el archivo que esta subido en ese campo.</li>
+        <li>El boton de "Guardar" la funcion de este sera guardar todos las acciones realizadas en la tabla y guardar los archivos en el servidor para que el profesor este enterado de la subida de los archivos.</li>
+        <li>Por ultimo podra cerrar session abriendo el apartado <i class="fas fa-user-circle icon"></i> y presionando "Cerrar sesion" </li>
+    </ul>
+    {% elif session.get('user_role') == 'profesor' %}
+    <p>Bienvenido Dr Ricardo espero que este sistema sea de su agrado ahora bien le dejo las siguientes instrucciones.</p>
+    <p>La sesion del profesor puede hacer diversas acciones:</p>
+    <ul>
+        <li>Podra acceder a las tablas de "Jornadas academicas" y "Tutorias" en sus respectivos apartados. <i class="fa-regular fa-calendar icon"></i> <i class="fa-solid fa-book menu icon"></i></li>
+        <li>Podra buscar a un alumno en especifico con su numero de control y cancelar la busqueda cuando ya no sea necesario.</li>
+        <li>Podra agregar o eliminar una nueva columna y nombrarla a su gusto.</li>
+        <li>Cada alumno contara con un boton de editar al final de la tabla al presionarlo podra realizar:</li>
+        <ul>
+            <li>Cambios en el nombre completo del alumno.</li>
+            <li>Eliminar algun archivo que no sea apto para la actividad.</li>
+            <li>Revisar el archivo pdf abriendolo en el navegador.</li>
+            <li>Podra cambiar el "Estado" y "Atendido" del alumno por las opciones indicadas.</li>
+            <li>Podra guardar las opciones que especifico al presionar el boton de "Guardar cambios"</li>
+            <li>Podra eliminar el alumno y sus archivos asosiados del sistema al presionar el boton de "Eliminar alumno".</li>
+        </ul>
+        <li>Por ultimo podra cerrar session abriendo el apartado <i class="fas fa-user-circle icon"></i> y presionando "Cerrar sesion" </li>
+    </ul>
     {% endif %}
 </div>
+
+</body>
 {% endblock %}
