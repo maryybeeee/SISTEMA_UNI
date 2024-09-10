@@ -24,23 +24,18 @@
         <ul>
             <li><span>Abre el panel de acciones.  <i class="fas fa-user-circle icon"></i></span></li>
             <li><span>Si eres un alumno y no estas registrado presiona el apartado de "Registrate como alumno".</span></li>
-            <li><span>Una vez registrado, presiona el apartado de "Iniciar sesion como alumno" y asi acceder a tus tutorías y jornadas academicas.</span></li>
-            <li><span>En el apartado de "Iniciar sesion como profesor" tu profesor podra iniciar sesion y revisar que archivos tienes subidos en tus respectivas actividades.</span></li>
+            <li><span>Una vez registrado, presiona el apartado de "Iniciar sesion como alumno" y asi tener acceso a tus tutorías y jornadas academicas.</span></li>
+            <li><span>En el apartado de "Iniciar sesion como profesor" tu profesor podra iniciar sesion y revisar que constancias tienes liberadas.</span></li>
         </ul>
         {% endif %}
     </div>
     {% if session.get('user_role') == 'alumno' %}
     <p>Bienvenido y esperamos que te guste la experiencia en este sistema</p>
-    <p>La sesion del alumno puede hacer diversas acciones:</p>
+    <p>La sesion del alumno solamente podra:</p>
     <ul>
         <li>Podra acceder a las tablas de "Jornadas academicas" y "Tutorias" en sus respectivos apartados. <i class="fa-regular fa-calendar icon"></i> <i class="fa-solid fa-book menu icon"></i></li>
-        <li>Al acceder a una de las dos tablas podra realizar las mismas tareas.</li>
-        <li>Podra subir archivos con formato de PDF exclusivamente y con un maximo de 100kb al sobrepasar dicho limite se mostrara una advertencia.</li>
-        <li>El boton de "Subir PDF" se mostrara cuando el alumno no tenga una actividad subida y al presionarlo podra seleccionar y subir su actividad.</li>
-        <li>El boton de "Ver PDF" como su nombre indica podra ver el pdf que se a subido y dicho boton aparecera despues de que el alumno alla subido alguna actividad.</li>
-        <li>El boton de "Reemplazar PDF" aparecera despues de subir alguna actividad y su funcion es reemplazar el archivo que esta subido en ese campo.</li>
-        <li>El boton de "Guardar" la funcion de este sera guardar todos las acciones realizadas en la tabla y guardar los archivos en el servidor para que el profesor este enterado de la subida de los archivos.</li>
-        <li>Por ultimo podra cerrar session abriendo el apartado <i class="fas fa-user-circle icon"></i> y presionando "Cerrar sesion" </li>
+        <li>Podra descargar las constancias en caso de ser necesario para el alumno.</li>
+        <li>Podra cerrar session abriendo el apartado <i class="fas fa-user-circle icon"></i> y presionando "Cerrar sesion" </li>
     </ul>
     {% elif session.get('user_role') == 'profesor' %}
     <p>Bienvenido Dr Ricardo espero que este sistema sea de su agrado ahora bien le dejo las siguientes instrucciones.</p>
