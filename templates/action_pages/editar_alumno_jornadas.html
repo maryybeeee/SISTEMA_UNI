@@ -3,6 +3,23 @@
 {% block content %}
 <head>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/profesores_dashboard.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+    <script>
+        function generateUUID() {
+            // Genera un UUID único
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+    
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('svg').forEach(function(svg) {
+                // Asigna un ID único al SVG
+                svg.id = generateUUID();
+            });
+        });
+    </script>
 </head>
 <body>
     <h2>Actualizar valor del Alumno</h2>
@@ -26,6 +43,21 @@
                     </select>
                     {% else %}
                     <div class="checkbox-wrapper">
+                        <div class="direcction">
+                            {% if value %}
+                            <svg id="barcode_{{ column }}" width="200" height="50"></svg>
+                            <script>
+                                // Generar el código de barras
+                                JsBarcode("#barcode_{{ column }}", "{{ value }}", {
+                                    format: "CODE128",
+                                    lineColor: "#000000",
+                                    width: 2,
+                                    height: 50,
+                                    displayValue: false
+                                });
+                            </script>
+                            {%endif%}
+                        </div>
                         <div class="direcction">
                             {% if value %}
                             <label><i class="fas fa-check"></i></label>
