@@ -7,7 +7,7 @@
         function confirmarEliminacion() {
             return confirm("¿Estás seguro de que deseas eliminar este registro?");
         }
-    </script>    
+    </script>
 </head>
 <body>
     <h2>Jornadas Académicas</h2>
@@ -54,9 +54,9 @@
                     {% for column in columns %}
                     <td>
                         {% if columns.index(column) > columns.index('Nombres') and columns.index(column) < columns.index('Conteo') %}
-                            {% if row[column] is none or row[column] == '' %}
+                            {% if row[column] is none or row[column] == 0 %}
                                 <i class="fas fa-times"></i>
-                            {% else %}
+                            {% elif row[column] == 1 %}
                                 <i class="fas fa-check"></i>
                             {% endif %}
                         {% else %}

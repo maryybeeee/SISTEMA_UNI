@@ -26,12 +26,14 @@
                     </select>
                     {% else %}
                     <div class="checkbox-wrapper">
-                        {% if value %}
-                            <a href="{{ url_for('uploaded_file', user_id=record['NoControl'], filename=value|basename) }}" target="_blank" class="view_pdf_button">Ver archivo PDF</a>
-                        {% endif %}
                         <div class="direction">
-                            <input type="checkbox" id="large_checkbox_{{ column }}" name="columns_to_clear" value="{{ column }}" {% if not value %}disabled{% endif %}>
-                            <label for="large_checkbox_{{ column }}">Eliminar valor de esta celda</label>
+                            {% if value %}
+                            <label><i class="fas fa-check"></i></label>
+                            {% else %}
+                            <label><i class="fas fa-times"></i></label>
+                            {% endif %}
+                            <input type="checkbox" id="large_checkbox_{{ column }}" name="columns_to_clear" value="{{ column }}">
+                            <label for="large_checkbox_{{ column }}">Cambiar valor de esta celda</label>
                         </div>
                     </div>
                     {% endif %}
