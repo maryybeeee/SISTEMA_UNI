@@ -14,4 +14,3 @@ class Config:
     SECRET_KEY = os.urandom(24)
     PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
     UPLOAD_FOLDER = 'static/uploads'
-    ALLOWED_EXTENSIONS = {'pdf'}

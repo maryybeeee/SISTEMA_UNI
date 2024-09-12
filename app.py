@@ -72,34 +72,39 @@ def registro_alumnos():
 # Ruta para mostrar la tabla de las jornadas academicas de los alumnos
 @app.route('/alumnos_jornadas', methods=['GET', 'POST'])
 def alumnos_jornadas():
-    # Muestra el dashboard de los alumnos donde pueden subir archivos
     if 'user_id' in session and session.get('user_role') == 'alumno':
         control_number = session['user_id']
-        if request.method == 'POST':
-            try:
-                conn = mysql.connector.connect(**db_config)
-                cursor = conn.cursor()
-                print("Conexión a la base de datos establecida")
-                # Obtener todas las columnas de la tabla jornadas_academicas
-                cursor.execute("SHOW COLUMNS FROM jornadas_academicas")
-                all_columns = [row[0] for row in cursor.fetchall()]
-                # Filtrar las columnas relevantes para los alumnos
-                student_columns = [col for col in all_columns if col not in ['Estado', 'Conteo', 'Atendidos']]
-                cursor.execute("SELECT * FROM jornadas_academicas WHERE NoControl = %s", (control_number,))
-                alumno_data = cursor.fetchall()
-                # Convertir los datos de la tabla en un diccionario para pasarlo a la plantilla
-                alumnos_dict = [dict(zip(student_columns, row)) for row in alumno_data]
-                print(f"Datos del alumno: {alumnos_dict}")
-                return render_template('alumnos/alumnos_jornadas.html', alumnos=alumnos_dict, columns=student_columns)
-            except mysql.connector.Error as err:
-                print(f"Error en la base de datos: {err}")
-                flash(f"Error en la base de datos: {err}", 'error')
-                return redirect(url_for('iniciar_alumnos'))
-            finally:
-                cursor.close()
-                conn.close()
-                print("Conexión a la base de datos cerrada")
-    return redirect(url_for('login_alumnos'))
+        try:
+            conn = mysql.connector.connect(**db_config)
+            cursor = conn.cursor()
+            print("Conexión a la base de datos establecida")
+            # Obtener todas las columnas de la tabla jornadas_academicas
+            cursor.execute("SHOW COLUMNS FROM jornadas_academicas")
+            all_columns = [row[0] for row in cursor.fetchall()]
+            
+            # Incluir todas las columnas para el alumno
+            student_columns = all_columns
+            
+            cursor.execute("SELECT * FROM jornadas_academicas WHERE NoControl = %s", (control_number,))
+            alumno_data = cursor.fetchall()
+            
+            # Convertir los datos de la tabla en un diccionario para pasarlo a la plantilla
+            alumnos_dict = [dict(zip(student_columns, row)) for row in alumno_data]
+            print(f"Datos del alumno: {alumnos_dict}")
+            
+            return render_template('alumnos/alumnos_jornadas.html', alumnos=alumnos_dict, columns=student_columns)
+        except mysql.connector.Error as err:
+            print(f"Error en la base de datos: {err}")
+            flash(f"Error en la base de datos: {err}", 'error')
+            return redirect(url_for('iniciar_alumnos'))
+        finally:
+            cursor.close()
+            conn.close()
+            print("Conexión a la base de datos cerrada")
+    else:
+        return redirect(url_for('login_alumnos'))
+
+
 
 # Ruta que se mostrara al ingresar en el login de alumnos
 @app.route('/login_alumnos')
@@ -140,29 +145,32 @@ def iniciar_alumnos():
 def alumnos_tutorias():
     if 'user_id' in session and session.get('user_role') == 'alumno':
         control_number = session['user_id']
-        if request.method == 'POST':
-            try:
-                conn = mysql.connector.connect(**db_config)
-                cursor = conn.cursor()
-                print("Conexión a la base de datos establecida")
-                cursor.execute("SHOW COLUMNS FROM tutorias")
-                all_columns = [row[0] for row in cursor.fetchall()]
-                student_columns = [col for col in all_columns if col not in ['Estado', 'Conteo', 'Atendidos']]
-                cursor.execute("SELECT * FROM tutorias WHERE NoControl = %s", (control_number,))
-                alumno_data = cursor.fetchall()
-                alumnos_dict = [dict(zip(student_columns, row)) for row in alumno_data]
-                print(f"Datos del alumno: {alumnos_dict}")
-                return render_template('alumnos/alumnos_tutorias.html', alumnos=alumnos_dict, columns=student_columns)
-            except mysql.connector.Error as err:
-                print(f"Error en la base de datos: {err}")
-                flash(f"Error en la base de datos: {err}", 'error')
-                return redirect(url_for('iniciar_alumnos'))
-            finally:
-                cursor.close()
-                conn.close()
-                print("Conexión a la base de datos cerrada")
-    return redirect(url_for('login_alumnos'))
-
+        try:
+            conn = mysql.connector.connect(**db_config)
+            cursor = conn.cursor()
+            print("Conexión a la base de datos establecida")
+            # Obtener todas las columnas de la tabla tutorias
+            cursor.execute("SHOW COLUMNS FROM tutorias")
+            all_columns = [row[0] for row in cursor.fetchall()]
+            # Incluir todas las columnas para el alumno
+            student_columns = all_columns
+            # Obtener los datos del alumno
+            cursor.execute("SELECT * FROM tutorias WHERE NoControl = %s", (control_number,))
+            alumno_data = cursor.fetchall()
+            # Convertir los datos de la tabla en un diccionario para pasarlo a la plantilla
+            alumnos_dict = [dict(zip(student_columns, row)) for row in alumno_data]
+            print(f"Datos del alumno: {alumnos_dict}")
+            return render_template('alumnos/alumnos_tutorias.html', alumnos=alumnos_dict, columns=student_columns)
+        except mysql.connector.Error as err:
+            print(f"Error en la base de datos: {err}")
+            flash(f"Error en la base de datos: {err}", 'error')
+            return redirect(url_for('iniciar_alumnos'))
+        finally:
+            cursor.close()
+            conn.close()
+            print("Conexión a la base de datos cerrada")
+    else:
+        return redirect(url_for('login_alumnos'))
 
 # Ruta que se mostrará al ingresar en el login de profesores
 @app.route('/login_profesores')
