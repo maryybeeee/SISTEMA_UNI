@@ -296,6 +296,12 @@ def profesores_jornadas():
                     for row in alumnos_dict:
                         count_non_empty = sum(1 for key in row if key not in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres', 'Conteo', 'Estado', 'Atendidos'] and row[key]==1)
                         row['Conteo'] = count_non_empty
+                        # Si el conteo es mayor o igual a 3, actualiza Estado y Atendidos
+                        if count_non_empty >= 3:
+                            row['Estado'] = 'LIBERADO'
+                            row['Atendidos'] = 'ATENDIDO'
+                            cursor.execute("""UPDATE jornadas_academicas SET Estado = %s, Atendidos = %s WHERE NoControl = %s""", ('LIBERADO', 'ATENDIDO', row['NoControl']))
+                            conn.commit()
                     return render_template('profesores/profesores_jornadas.html', alumnos=alumnos_dict, columns=column_names)
                 except mysql.connector.Error as err:
                     print(f"Error en la base de datos: {err}")
@@ -328,6 +334,12 @@ def profesores_jornadas():
             for row in alumnos_dict:
                 count_non_empty = sum(1 for key in row if key not in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres', 'Conteo', 'Estado', 'Atendidos'] and row[key]==1)
                 row['Conteo'] = count_non_empty
+                # Si el conteo es mayor o igual a 3, actualiza Estado y Atendidos
+                if count_non_empty >= 3:
+                    row['Estado'] = 'LIBERADO'
+                    row['Atendidos'] = 'ATENDIDO'
+                    cursor.execute("""UPDATE jornadas_academicas SET Estado = %s, Atendidos = %s WHERE NoControl = %s""", ('LIBERADO', 'ATENDIDO', row['NoControl']))
+                    conn.commit()
             return render_template('profesores/profesores_jornadas.html', alumnos=alumnos_dict, columns=column_names)
         except mysql.connector.Error as err:
             print(f"Error en la base de datos: {err}")
@@ -510,6 +522,11 @@ def profesores_tutorias():
                     for row in alumnos_dict:
                         count_non_empty = sum(1 for key in row if key not in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres', 'Conteo', 'Estado'] and row[key]==1)
                         row['Conteo'] = count_non_empty
+                        # Si el conteo es mayor o igual a 3, actualiza Estado y Atendidos
+                        if count_non_empty >= 3:
+                            row['Estado'] = 'LIBERADO'
+                            cursor.execute("""UPDATE tutorias SET Estado = %s WHERE NoControl = %s""", ('LIBERADO', row['NoControl']))
+                            conn.commit()
                     return render_template('profesores/profesores_tutorias.html', alumnos=alumnos_dict, columns=column_names)
                 except mysql.connector.Error as err:
                     print(f"Error en la base de datos: {err}")
@@ -542,6 +559,10 @@ def profesores_tutorias():
             for row in alumnos_dict:
                 count_non_empty = sum(1 for key in row if key not in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres', 'Conteo', 'Estado'] and row[key]==1)
                 row['Conteo'] = count_non_empty
+                # Si el conteo es mayor o igual a 3, actualiza Estado y Atendidos
+                if count_non_empty >= 3:
+                    row['Estado'] = 'LIBERADO'
+                    cursor.execute("""UPDATE tutorias SET Estado = %s WHERE NoControl = %s""", ('LIBERADO', row['NoControl']))
             return render_template('profesores/profesores_tutorias.html', alumnos=alumnos_dict, columns=column_names)
         except mysql.connector.Error as err:
             print(f"Error en la base de datos: {err}")
