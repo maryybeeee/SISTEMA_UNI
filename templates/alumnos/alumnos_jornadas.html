@@ -6,55 +6,42 @@
 </head>
 <body>
     <h1>{{ session['user_name'] }}</h1>
-    <div class="container">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <ul class="flashes">
-                {% for category, message in messages %}
-                    <li class="{{ category }}">{{ message }}</li>
-                {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %}
-    </div>
     <div class="centrar">
-        <div class="table-container form">
-            <div class="scroll-container">
-                <table class="table table-bordered table-striped">
-                    <thead>
-                        <tr>
-                            <th class="no-control">No Control</th>
-                            <th class="nombre">Nombre</th>
-                            {% for col in columns %}
-                                {% if col not in ['NoControl', 'Nombre', 'Conteo'] %}
-                                    <th>{{ col }}</th>
-                                {% endif %}
-                            {% endfor %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in alumnos %}
-                        <tr class="detail-row">
-                            {% for col in columns %}
-                            <td data-label="{{ col }}" class="{% if col == 'Conteo' %}hidden{% endif %}">
-                                {% if col in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres'] %}
-                                    {{ item[col] }}
-                                {% elif col in ['Estado', 'Atendidos'] %}
-                                    {{ item[col] }}
-                                {% else %}
-                                    {% if item[col] == 1 %}
-                                        <a href="#" target="_blank" class="download-button">Descargar</a>
-                                    {% elif item[col] == 0 %}
-                                        <span class="message-view">Constancia no emitida</span>
-                                    {% endif %}
-                                {% endif %}
-                            </td>
-                            {% endfor %}
-                        </tr>
+        <div class="form">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th class="no-control">No Control</th>
+                        <th class="nombre">Nombre</th>
+                        {% for col in columns %}
+                            {% if col not in ['NoControl', 'Nombre', 'Conteo'] %}
+                                <th>{{ col }}</th>
+                            {% endif %}
                         {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in alumnos %}
+                    <tr class="detail-row">
+                        {% for col in columns %}
+                        <td data-label="{{ col }}" class="{% if col == 'Conteo' %}hidden{% endif %}">
+                            {% if col in ['NoControl', 'ApellidoP', 'ApellidoM', 'Nombres'] %}
+                                {{ item[col] }}
+                            {% elif col in ['Estado', 'Atendidos'] %}
+                                {{ item[col] }}
+                            {% else %}
+                                {% if item[col] == 1 %}
+                                    <span class="message-view message-view--green">Emitida</span>
+                                {% elif item[col] == 0 %}
+                                    <span class="message-view message-view--blue">Constancia no emitida</span>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </body>

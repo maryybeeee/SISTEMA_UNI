@@ -6,20 +6,9 @@
 </head>
 <body>
     <h1>{{ session['user_name'] }}</h1>
-    <div class="container">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <ul class="flashes">
-                {% for category, message in messages %}
-                    <li class="{{ category }}">{{ message }}</li>
-                {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %}
-    </div>
     <div class="centrar">
-        <div class="table-container form">
-            <div class="scroll-container">
+        <div class="form">
+            
                 <table class="table table-bordered table-striped">
                     <thead>
                         <tr>
@@ -43,9 +32,9 @@
                                         {{ item[col] }}
                                     {% else %}
                                         {% if item[col] == 1 %}
-                                            <a href="#" target="_blank" class="download-button">Descargar</a>
+                                            <span class="message-view message-view--green">Emitida</span>
                                         {% elif item[col] == 0 %}
-                                            <span class="message-view">Constancia no subida</span>
+                                            <span class="message-view message-view--blue">Constancia no emitida</span>
                                         {% endif %}
                                     {% endif %}
                                 </td>
@@ -54,7 +43,7 @@
                         {% endfor %}
                     </tbody>
                 </table>
-            </div>
+            
         </div>
     </div>
 </body>

@@ -36,6 +36,17 @@ table {
     border-collapse: collapse;
     margin-bottom: 20px;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+}
+
+thead {
+    display: none;
+}
+
+tbody {
+    display: flex;
+    flex-direction: column;
 }
 
 table th, table td {
@@ -44,120 +55,56 @@ table th, table td {
     border: 1px solid #b8b8b8;
 }
 
+tr {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+}
+td {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    text-align: left;
+    position: relative;
+}
+
+td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+}
+
 table th {
     background-color: #666666;
 }
 
-@media screen and (min-width: 769px) {
-    table {
-        display: flex;
-        flex-direction: column;
-    }
-
-    thead {
-        display: none;
-    }
-
-    tbody {
-        display: flex;
-        flex-direction: column;
-    }
-
-    tr {
-        display: flex;
-        flex-direction: column;
-        margin-bottom: 15px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 10px;
-    }
-
-    td {
-        display: block;
-        width: 100%;
-        padding: 10px;
-        box-sizing: border-box;
-        text-align: left;
-        position: relative;
-    }
-
-    td::before {
-        content: attr(data-label);
-        font-weight: bold;
-        display: block;
-        margin-bottom: 5px;
-    }
-}
-
-@media screen and (max-width: 768px) {
-    table, thead, tbody, th, td, tr {
-        display: block;
-    }
-
-    thead tr {
-        display: none
-    }
-
-    .detail-row {
-        margin-bottom: 15px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 10px;
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-    }
-
-    .detail-row td {
-        display: block;
-        width: 100%;
-        padding: 10px;
-        box-sizing: border-box;
-        text-align: left;
-        position: relative;
-    }
-
-    .detail-row td::before {
-        content: attr(data-label);
-        font-weight: bold;
-        display: block;
-        margin-bottom: 5px;
-    }
-}
-
-.download-button {
-    display: block;
-    width: 35%;
-    max-width: 200px;
-    padding: 8px 12px;
-    margin: 10px auto;
-    border: 1px solid #28a745;
-    border-radius: 4px;
-    background-color: #28a745;
-    color: white;
-    text-decoration: none;
-    font-size: 14px;
-    text-align: center;
-    box-sizing: border-box;
-}
-
-.download-button:hover {
-    background-color: #218838;
-    border-color: #1e7e34;
-}
 
 .message-view{
     display: inline-block;
     padding: 10px;
-    background-color: #cce5ff;
-    border: 1px solid #b8daff;
     border-radius: 8px;
-    color: #004085;
     font-size: 14px;
     font-weight: bold;
     text-align: center;
-    width: 28%;
+    width: auto;
     box-sizing: border-box;
+}
+
+.message-view--blue {
+    background-color: #cce5ff;
+    border: 1px solid #b8daff;
+    color: #004085;
+}
+
+.message-view--green {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
 }
 
 .form{
