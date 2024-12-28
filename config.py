@@ -4,7 +4,7 @@ from datetime import timedelta
 # Configuración de la base de datos
 db_config = {
     'user': 'root',
-    'password': 'MiguelWorkbench009',
+    'password': '',
     'host': 'localhost',
     'database': 'bd',
     'port': 3306
